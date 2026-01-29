@@ -1,0 +1,35 @@
+services:
+  smart-backend:
+    build:
+      context: ./smart-backend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./smart-backend:/app
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - TZ=Asia/Tokyo
+    networks:
+      - smart-network
+  smart-frontend:
+    build:
+      context: ./smart-frontend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./smart-frontend:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - VITE_API_URL=http://host.docker.internal:5173
+      - CI=true
+    command: sh -c "pnpm install && pnpm run dev"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - smart-network
+networks:
+  smart-network:
+    driver: bridge

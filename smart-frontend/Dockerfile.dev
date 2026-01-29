@@ -1,0 +1,11 @@
+FROM public.ecr.aws/docker/library/node:lts-alpine
+WORKDIR /app
+COPY package*.json ./
+# RUN npm install
+RUN corepack enable pnpm
+RUN corepack prepare pnpm@10.14.0
+RUN pnpm install --no-frozen-lockfile
+COPY . .
+EXPOSE 5173
+# CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
+CMD ["pnpm", "run", "dev", "--", "--host", "0.0.0.0"]
