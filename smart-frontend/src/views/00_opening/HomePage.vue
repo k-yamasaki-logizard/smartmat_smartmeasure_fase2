@@ -8,7 +8,7 @@ import LinkButton from '@/components/LinkButton.vue';
 </script>
 
 <template>
-    <Title text="HOME" />
-    <LinkButton to="/update" subtext="">容積・重量 マスタ登録/更新</LinkButton>
-    <LinkButton to="/settings" subtext="">設定</LinkButton>
+    <Title text="HOME" class="mb-4" />
+    <LinkButton to="/update" subtext="" class="mb-4">容積・重量 マスタ登録/更新</LinkButton>
+    <LinkButton to="/settings" subtext="" class="mb-4">設定</LinkButton>
 </template>

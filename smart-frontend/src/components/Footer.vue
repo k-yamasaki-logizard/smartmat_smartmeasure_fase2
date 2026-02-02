@@ -3,11 +3,7 @@
 </script>
 
 <template>
-  <!-- 
-    3列のグリッドレイアウトに変更 
-    中央寄せ・固定フッター
-  -->
-  <div class="fixed bottom-0 w-full mx-auto grid grid-cols-3 items-center justify-center gap-3 p-4">
+  <div class="fixed bottom-0 left-0 right-0 mx-4 grid grid-cols-3 gap-3 mb-2">
     <slot />
   </div>
 </template>

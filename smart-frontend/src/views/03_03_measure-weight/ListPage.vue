@@ -12,16 +12,14 @@ import { useMeasureStore } from '@/stores/measure'
 import type { StoredDataItem } from '@/stores/types'
 
 /**
- * 画面ID:03_01_04
- * 容積・重量測定一覧
+ * 画面ID:03_03_03
+ * 重量測定一覧
  */
 const router = useRouter()
-
 const measureStore = useMeasureStore()
-const items: StoredDataItem[] = computed(() => measureStore.storedList)
+const items = computed(() => measureStore.storedList)
 
 function handleRemeasure(item: StoredDataItem) {
-  // TODO: 再測定処理・画面遷移
   console.log('再測定', item.tempItemId)
 }
 </script>
@@ -29,43 +27,33 @@ function handleRemeasure(item: StoredDataItem) {
 <template>
   <FixedScrollLayout>
     <template #fixed>
-      <Title text="容積・重量測定一覧" class="mb-4">
-        <BackButton to="/update/volume-and-weight/measure-weight" />
+      <Title text="重量測定一覧" class="mb-4">
+        <BackButton to="/update/weight/measure-weight" />
       </Title>
     </template>
     <template #scrollable>
-      <div v-for="(item, index) in items as StoredDataItem[]" :key="item.tempItemId" class="w-full">
+      <div v-for="(item, index) in items" :key="item.tempItemId" class="w-full">
         <Card :backgroundColor="(index + 1) % 2 === 0 ? 'gray' : 'white'">
           <template #content>
             <div class="flex flex-row items-center gap-2 w-full">
-              <span class="font-medium shrink-0">{{ index + 1 }}:</span>
+              <span class="font-medium shrink-0">{{ 'number' in item ? item.number : index + 1 }}:</span>
               <div>
-                <div class="flex gap-1 items-center">
+                <div class="flex-1 min-w-0 flex flex-col gap-1 text-left">
+                  <div class="flex gap-1 items-center">
                     <span class="text-[#4caf50] text-right w-[70px] shrink-0">BC:</span>
                     <span>{{ item.barcode }}</span>
-                </div>
-                <div class="flex gap-1 items-center">
-                    <span class="text-[#4caf50] text-right w-[70px] shrink-0">縦:</span>
-                    <span>{{ item.length }}</span>
-                </div>
-                <div class="flex gap-1 items-center">
-                    <span class="text-[#4caf50] text-right w-[70px] shrink-0">横:</span>
-                    <span>{{ item.width }}</span>
-                </div>
-                <div class="flex gap-1 items-center">
-                    <span class="text-[#4caf50] text-right w-[70px] shrink-0">高さ:</span>
-                    <span>{{ item.height }}</span>
-                </div>
-                <div class="flex gap-1 items-center">
+                  </div>
+                  <div class="flex gap-1 items-center">
                     <span class="text-[#4caf50] text-right w-[70px] shrink-0">重量:</span>
                     <span v-if="item.isMeasuringWeight">(測定中...)</span>
                     <span v-else>{{ item.weight }}</span>
-                </div>
-                <div class="flex gap-1">
+                  </div>
+                  <div class="flex gap-1 whitespace-nowrap">
                     <span class="text-neutral-500 text-sm">(計測時間 {{ item.measuredAt }})</span>
                     <div @click.stop>
-                        <MeasureButton class="whitespace-nowrap px-3 text-sm" text="再測定" @click="handleRemeasure(item)" />
+                      <MeasureButton class="whitespace-nowrap px-3 text-sm" text="再測定" @click="handleRemeasure(item)" />
                     </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -75,7 +63,7 @@ function handleRemeasure(item: StoredDataItem) {
     </template>
   </FixedScrollLayout>
   <Footer>
-    <FooterButton position="3" variant="primary" @click="router.push('/update/volume-and-weight/measure-weight')">
+    <FooterButton position="3" variant="primary" @click="router.push('/update/weight/measure-weight')">
       確定
     </FooterButton>
   </Footer>

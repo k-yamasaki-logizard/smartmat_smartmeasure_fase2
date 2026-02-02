@@ -9,23 +9,21 @@ import Input from '@/components/Input.vue'
 import { useMeasureStore } from '@/stores/measure'
 
 /**
- * 画面ID:03_02_01
- * バーコードスキャン
+ * 画面ID:03_03_01
+ * バーコードスキャン（重量）
  */
 const router = useRouter()
 const barcode = ref('')
-
-const measureStore = useMeasureStore();
+const measureStore = useMeasureStore()
 
 const handleConfirm = () => {
   measureStore.addEditingItem(barcode.value)
-  router.push('/update/volume-and-weight/measure-volume')
+  router.push('/update/weight/measure-weight')
 }
 
 onMounted(() => {
   measureStore.clearEditingItem()
 })
-
 </script>
 
 <template>
@@ -33,13 +31,13 @@ onMounted(() => {
     <BackButton to="/update" />
   </Title>
   <div class="w-full flex flex-col text-left mb-4">
-    <span>容積・重量を測定する商品の</span>
+    <span>重量を測定する商品の</span>
     <span>バーコードをスキャンしてください</span>
   </div>
   <Input v-model="barcode" label="BC:" class="mb-4" />
   <Footer>
     <FooterButton position="3" variant="primary" @click="handleConfirm">
-        確定
+      確定
     </FooterButton>
   </Footer>
 </template>
