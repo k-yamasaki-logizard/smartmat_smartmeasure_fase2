@@ -34,7 +34,7 @@ onMounted(() => {
     <span>容積を測定する商品の</span>
     <span>バーコードをスキャンしてください</span>
   </div>
-  <Input v-model="barcode" label="BC:" class="mb-4" />
+  <Input v-model="barcode" label="商品名:" class="mb-4" />
   <Footer>
     <FooterButton position="3" variant="primary" @click="handleConfirm">
       確定

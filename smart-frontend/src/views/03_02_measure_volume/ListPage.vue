@@ -41,7 +41,7 @@ function handleRemeasure(item: StoredDataItem): void {
               <div>
                 <div class="flex-1 min-w-0 flex flex-col gap-1 text-left">
                   <div class="flex gap-1 items-center">
-                    <span class="text-[#4caf50] text-right w-[70px] shrink-0">BC:</span>
+                    <span class="text-[#4caf50] text-right w-[70px] shrink-0">商品名:</span>
                     <span>{{ item.barcode }}</span>
                   </div>
                   <div class="flex gap-1 items-center">

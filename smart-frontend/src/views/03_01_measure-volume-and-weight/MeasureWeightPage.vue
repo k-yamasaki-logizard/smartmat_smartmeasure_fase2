@@ -39,7 +39,7 @@ const handleConfirm = () => {
         <span>本体上面端の計測ボタンと、下記の</span>
         <span>「重量測定開始」ボタンを押下してください。</span>
     </div>
-    <p class="font-bold w-full text-left mb-4">BC: {{ itemLabel }}</p>
+    <p class="font-bold w-full text-left mb-4">商品名: {{ itemLabel }}</p>
     <div class="w-full flex justify-center">
         <MeasureButton :disabled="measureStore.isMeasuringWeight" class="py-3 px-6 " @click="handleMeasureWeight">
             {{ measureStore.isMeasuringWeight ? '測定中...' : '重量測定開始' }}

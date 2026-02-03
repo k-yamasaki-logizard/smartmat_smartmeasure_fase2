@@ -49,7 +49,7 @@ function onRemeasureModalUpdateShow(value: boolean): void {
               <span class="font-medium shrink-0">{{ index + 1 }}:</span>
               <div>
                 <div class="flex gap-1 items-center">
-                    <span class="text-[#4caf50] text-right w-[70px] shrink-0">BC:</span>
+                    <span class="text-[#4caf50] text-right w-[70px] shrink-0">商品名:</span>
                     <span>{{ item.barcode }}</span>
                 </div>
                 <div class="flex gap-1 items-center">

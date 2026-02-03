@@ -39,5 +39,20 @@ export const useSettingsStore = defineStore('settings', {
       if (payload.height !== undefined) this.volumeHeightField = payload.height
       if (payload.weight !== undefined) this.weightField = payload.weight
     },
+    /**
+     * 設定によって、長い方を縦/横に自動割り当てする
+     * 割り当て後の値を取得する
+     * @param length 縦
+     * @param width 横
+     * @returns 
+     */
+    getAssignedLengthWidth(length: string, width: string): { length: string, width: string, changed: boolean } {
+      const lengthValue = Number(length)
+      const widthValue = Number(width)
+      if (this.volumeLongestSide === 'length') {
+        return { length: lengthValue > widthValue ? length.toString() : width.toString(), width: lengthValue < widthValue ? length.toString() : width.toString(), changed: lengthValue < widthValue }
+      }
+      return { length: lengthValue < widthValue ? length.toString() : width.toString(), width: lengthValue > widthValue ? length.toString() : width.toString(), changed: lengthValue > widthValue }
+    },
   },
 })
