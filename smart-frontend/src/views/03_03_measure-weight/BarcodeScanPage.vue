@@ -22,7 +22,7 @@ const notification = useNotificationStore()
 
 const handleConfirm = async () => {
   const sku = await zeroApi.getSku('3', barcode.value)
-  if(!sku?.DATA?.SKU?.ITEM_NAME) {
+  if(sku?.ERROR_CODE !== "0") {
     notification.show('バーコードの読み取りでエラーが発生しました')
     return
   }

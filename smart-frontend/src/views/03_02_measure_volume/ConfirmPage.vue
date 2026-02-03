@@ -7,7 +7,6 @@ import FooterButton from '@/components/FooterButton.vue'
 import Footer from '@/components/Footer.vue'
 import FixedScrollLayout from '@/layouts/FixedScrollLayout.vue'
 import { useMeasureStore } from '@/stores/measure'
-import type { StoredDataItem } from '@/stores/types'
 
 /**
  * 画面ID:03_02_05

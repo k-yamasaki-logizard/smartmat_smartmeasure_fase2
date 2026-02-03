@@ -22,8 +22,8 @@ const notification = useNotificationStore()
 
 const handleConfirm = async () => {
   const sku = await zeroApi.getSku('3', barcode.value)
-  if(!sku) {
-    notification.show('SKUが見つかりませんでした')
+  if(sku?.ERROR_CODE !== "0") {
+    notification.show('バーコードの読み取りでエラーが発生しました')
     return
   }
   measureStore.addEditingItem(barcode.value, sku.DATA.SKU.ITEM_NAME)

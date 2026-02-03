@@ -2,7 +2,7 @@ import type { RouteRecordRaw } from 'vue-router'
 import BarcodeScanPage from '@/views/03_02_measure_volume/BarcodeScanPage.vue'
 import MeasureVolumePage from '@/views/03_02_measure_volume/MeasureVolumePage.vue'
 import ListPage from '@/views/03_02_measure_volume/ListPage.vue'
-import ConfirmItemPage from '@/views/03_02_measure_volume/ConfirmItemPage.vue'
+import ConfirmPage from '@/views/03_02_measure_volume/ConfirmPage.vue'
 import FinishPage from '@/views/03_02_measure_volume/FinishPage.vue'
 
 /**
@@ -15,7 +15,7 @@ const routes: RouteRecordRaw[] = [
       { path: 'barcode-scan', name: 'VolumeBarcodeScan', component: BarcodeScanPage },
       { path: 'measure-volume', name: 'VolumeMeasureVolume', component: MeasureVolumePage },
       { path: 'list', name: 'VolumeList', component: ListPage },
-      { path: 'confirm', name: 'VolumeConfirm', component: ConfirmItemPage },
+      { path: 'confirm', name: 'VolumeConfirm', component: ConfirmPage },
       { path: 'finish', name: 'VolumeFinish', component: FinishPage },
     ],
   },
