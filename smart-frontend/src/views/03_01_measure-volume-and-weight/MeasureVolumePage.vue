@@ -8,10 +8,12 @@ import FooterButton from '@/components/FooterButton.vue'
 import Input from '@/components/Input.vue'
 import { useMeasureStore } from '@/stores/measure'
 import { useSettingsStore } from '@/stores/settings'
+import { useNotificationStore } from '@/stores/notification'
 
 const router = useRouter()
 const measureStore = useMeasureStore()
 const settingsStore = useSettingsStore()
+const notification = useNotificationStore()
 
 const itemLabel = computed(() => measureStore.editingItem?.barcode ?? '')
 
@@ -22,7 +24,7 @@ const height = ref('')
 const handleConfirm = () => {
   const { length: assignedLength, width: assignedWidth, changed } = settingsStore.getAssignedLengthWidth(length.value, width.value)
   if(changed) {
-    console.log("縦/横を入れ替えました")
+    notification.show("縦/横を入れ替えました")
   }
   measureStore.updateEditingItemVolume({
     length: assignedLength,

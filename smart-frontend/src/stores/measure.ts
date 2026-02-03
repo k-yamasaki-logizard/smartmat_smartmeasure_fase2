@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import type { MeasureMode, StoredDataItem, StoredDataRecord } from './types'
+import { useNotificationStore } from './notification'
 
 function pad2(n: number): string {
   return ('0' + n).slice(-2)
@@ -61,6 +62,7 @@ export const useMeasureStore = defineStore('measure', {
       const item: StoredDataItem = {
         tempItemId: crypto.randomUUID(),
         barcode: barcode,
+        itemName: '',
         length: '',
         width: '',
         height: '',
@@ -116,7 +118,7 @@ export const useMeasureStore = defineStore('measure', {
       this.isMeasuringWeight = true
       item.isMeasuringWeight = true
       await new Promise((resolve) => setTimeout(resolve, 30 * 1000))
-      console.log('updateWeight', this.editingItemId)
+      useNotificationStore().show(`【商品名：${item.itemName}】重量測定が完了しました`)
       item.weight = Math.floor(Math.random() * 1000000).toString()
       item.isMeasuringWeight = false
       this.isMeasuringWeight = false

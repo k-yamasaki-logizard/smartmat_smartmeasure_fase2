@@ -19,6 +19,7 @@ export type VolumeLongestSide = 'length' | 'width'
 export interface StoredDataItem {
   tempItemId: string
   barcode: string
+  itemName: string
   length: string
   width: string
   height: string
