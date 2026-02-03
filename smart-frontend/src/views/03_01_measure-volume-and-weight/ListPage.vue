@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import Title from '@/components/Title.vue'
 import BackButton from '@/components/BackButton.vue'
@@ -8,6 +8,7 @@ import MeasureButton from '@/components/MeasureButton.vue'
 import FooterButton from '@/components/FooterButton.vue'
 import Footer from '@/components/Footer.vue'
 import FixedScrollLayout from '@/layouts/FixedScrollLayout.vue'
+import RemeasureChoiceModal from '@/views/03_01_measure-volume-and-weight/RemeasureChoiceModal.vue'
 import { useMeasureStore } from '@/stores/measure'
 import type { StoredDataItem } from '@/stores/types'
 
@@ -16,13 +17,20 @@ import type { StoredDataItem } from '@/stores/types'
  * 容積・重量測定一覧
  */
 const router = useRouter()
-
 const measureStore = useMeasureStore()
-const items: StoredDataItem[] = computed(() => measureStore.storedList)
+const items = computed(() => measureStore.storedList)
 
-function handleRemeasure(item: StoredDataItem) {
-  // TODO: 再測定処理・画面遷移
-  console.log('再測定', item.tempItemId)
+const showRemeasureModal = ref(false)
+const remeasureTargetItem = ref<StoredDataItem | null>(null)
+
+function handleRemeasure(item: StoredDataItem): void {
+  remeasureTargetItem.value = item
+  showRemeasureModal.value = true
+}
+
+function onRemeasureModalUpdateShow(value: boolean): void {
+  showRemeasureModal.value = value
+  if (!value) remeasureTargetItem.value = null
 }
 </script>
 
@@ -34,7 +42,7 @@ function handleRemeasure(item: StoredDataItem) {
       </Title>
     </template>
     <template #scrollable>
-      <div v-for="(item, index) in items as StoredDataItem[]" :key="item.tempItemId" class="w-full">
+      <div v-for="(item, index) in items" :key="item.tempItemId" class="w-full">
         <Card :backgroundColor="(index + 1) % 2 === 0 ? 'gray' : 'white'">
           <template #content>
             <div class="flex flex-row items-center gap-2 w-full">
@@ -79,4 +87,9 @@ function handleRemeasure(item: StoredDataItem) {
       確定
     </FooterButton>
   </Footer>
+  <RemeasureChoiceModal
+    :show="showRemeasureModal"
+    :item="remeasureTargetItem"
+    @update:show="onRemeasureModalUpdateShow"
+  />
 </template>

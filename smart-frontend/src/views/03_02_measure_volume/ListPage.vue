@@ -19,8 +19,9 @@ const router = useRouter()
 const measureStore = useMeasureStore()
 const items = computed(() => measureStore.storedList)
 
-function handleRemeasure(item: StoredDataItem) {
-  console.log('再測定', item.tempItemId)
+function handleRemeasure(item: StoredDataItem): void {
+  measureStore.setEditingItemById(item.tempItemId)
+  router.push('/update/volume/measure-volume')
 }
 </script>
 

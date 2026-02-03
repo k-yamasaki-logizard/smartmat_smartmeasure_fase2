@@ -13,6 +13,10 @@ function formatMeasuredAt(): string {
 /**
  * 測定ストア
  * editingItemId で「編集中」の StoredDataItem を指し、全件は storedData で管理
+ * 
+ * ※
+ * 重量測定など、非同期で「編集中」か「測定済」の商品に更新を行う箇所があるので
+ * 簡単のために編集中と測定済の商品を同じ領域に置いておく
  */
 export const useMeasureStore = defineStore('measure', {
   state: () => ({
@@ -73,6 +77,16 @@ export const useMeasureStore = defineStore('measure', {
      */
     storeEditingItem() {
       this.editingItemId = ''
+    },
+
+    /**
+     * 指定した商品を編集中にセット（再測定時など）
+     * storedData に存在する tempItemId の場合のみ editingItemId を更新する
+     */
+    setEditingItemById(tempItemId: string) {
+      if (this.storedData[tempItemId]) {
+        this.editingItemId = tempItemId
+      }
     },
 
     clearEditingItem() {

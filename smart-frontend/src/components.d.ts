@@ -27,6 +27,7 @@ declare module 'vue' {
     LinkButton: typeof import('./components/LinkButton.vue')['default']
     MeasureButton: typeof import('./components/MeasureButton.vue')['default']
     MeasureWeightButton: typeof import('./components/MeasureWeightButton.vue')['default']
+    Modal: typeof import('./components/Modal.vue')['default']
     ReMeasure: typeof import('./components/ReMeasure.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
@@ -34,5 +35,7 @@ declare module 'vue' {
     Title: typeof import('./components/Title.vue')['default']
     VanField: typeof import('vant/es')['Field']
     VanForm: typeof import('vant/es')['Form']
+    VolumeLongestSideSettingsModal: typeof import('./components/VolumeLongestSideSettingsModal.vue')['default']
+    VolumeWeightSettingsModal: typeof import('./components/VolumeWeightSettingsModal.vue')['default']
   }
 }
