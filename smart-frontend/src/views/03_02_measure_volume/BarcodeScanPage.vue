@@ -7,6 +7,8 @@ import Footer from '@/components/Footer.vue'
 import FooterButton from '@/components/FooterButton.vue'
 import Input from '@/components/Input.vue'
 import { useMeasureStore } from '@/stores/measure'
+import useZeroApi from '@/composables/zero-api'
+import { useNotificationStore } from '@/stores/notification'
 
 /**
  * 画面ID:03_02_01
@@ -15,9 +17,16 @@ import { useMeasureStore } from '@/stores/measure'
 const router = useRouter()
 const barcode = ref('')
 const measureStore = useMeasureStore()
+const zeroApi = useZeroApi()
+const notification = useNotificationStore()
 
-const handleConfirm = () => {
-  measureStore.addEditingItem(barcode.value)
+const handleConfirm = async () => {
+  const sku = await zeroApi.getSku('3', barcode.value)
+  if(!sku) {
+    notification.show('SKUが見つかりませんでした')
+    return
+  }
+  measureStore.addEditingItem(barcode.value, sku.DATA.SKU.ITEM_NAME)
   router.push('/update/volume/measure-volume')
 }
 

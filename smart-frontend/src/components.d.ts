@@ -21,6 +21,7 @@ declare module 'vue' {
     Modal: typeof import('./components/Modal.vue')['default']
     NotificationBar: typeof import('./components/NotificationBar.vue')['default']
     ReMeasure: typeof import('./components/ReMeasure.vue')['default']
+    RemeasureChoiceModal: typeof import('./components/RemeasureChoiceModal.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     Select: typeof import('./components/Select.vue')['default']

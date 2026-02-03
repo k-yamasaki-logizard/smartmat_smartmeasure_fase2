@@ -7,18 +7,28 @@ import Footer from '@/components/Footer.vue'
 import FooterButton from '@/components/FooterButton.vue'
 import Input from '@/components/Input.vue'
 import { useMeasureStore } from '@/stores/measure'
+import useZeroApi from '@/composables/zero-api'
+import { useNotificationStore } from '@/stores/notification'
 
 /**
- * 画面ID:03_02_01
+ * 画面ID:03_01_01
  * バーコードスキャン
  */
 const router = useRouter()
 const barcode = ref('')
+const zeroApi = useZeroApi()
+const notification = useNotificationStore()
 
 const measureStore = useMeasureStore();
 
-const handleConfirm = () => {
-  measureStore.addEditingItem(barcode.value)
+const handleConfirm = async () => {
+  // 暫定的に、pack_barcode=3で固定
+  const sku = await zeroApi.getSku('3', barcode.value)
+  if(sku?.ERROR_CODE !== "0") {
+    notification.show('バーコードの読み取りでエラーが発生しました')
+    return
+  }
+  measureStore.addEditingItem(barcode.value, sku.DATA.SKU[0].ITEM_NAME)
   router.push('/update/volume-and-weight/measure-volume')
 }
 

@@ -12,7 +12,12 @@
     "noUnusedParameters": true,
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true
+    "noUncheckedSideEffectImports": true,
+    "target": "ES2023",
+    "lib": [
+      "ES2023",
+      "DOM"
+    ]
   },
   "include": [
     "src/**/*.ts",

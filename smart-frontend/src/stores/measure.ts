@@ -58,11 +58,11 @@ export const useMeasureStore = defineStore('measure', {
     /**
      * 新規 1 件を開始（バーコードスキャン確定時）。storedData に追加し editingItemId をセット
      */
-    addEditingItem(barcode: string) {
+    addEditingItem(barcode: string, itemName: string) {
       const item: StoredDataItem = {
         tempItemId: crypto.randomUUID(),
         barcode: barcode,
-        itemName: '',
+        itemName: itemName,
         length: '',
         width: '',
         height: '',
