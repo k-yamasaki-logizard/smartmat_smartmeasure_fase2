@@ -23,7 +23,7 @@ function dismiss(): void {
       style="bottom: 5rem;"
       @click="dismiss"
     >
-      <span class="min-w-0 flex-1">{{ message }}</span>
+      <span class="min-w-0 flex-1 whitespace-pre-line">{{ message }}</span>
       <span class="ml-2 shrink-0 text-neutral-500">×</span>
     </button>
   </Transition>

@@ -54,7 +54,7 @@ function chooseWeight(): void {
       <div class="flex flex-col gap-1">
         <div class="flex gap-1 items-center">
           <span class="text-[#4caf50] w-[56px] shrink-0">商品名:</span>
-          <span>{{ item.barcode }}</span>
+          <span>{{ item.itemName }}</span>
         </div>
         <template v-if="mode === 'volume-and-weight' || mode === 'volume'">
           <div class="flex gap-1 items-center">

@@ -118,7 +118,7 @@ export const useMeasureStore = defineStore('measure', {
       this.isMeasuringWeight = true
       item.isMeasuringWeight = true
       await new Promise((resolve) => setTimeout(resolve, 30 * 1000))
-      useNotificationStore().show(`【商品名：${item.itemName}】重量測定が完了しました`)
+      useNotificationStore().show(`【商品名：${item.itemName}】\n重量測定が完了しました`)
       item.weight = Math.floor(Math.random() * 1000000).toString()
       item.isMeasuringWeight = false
       this.isMeasuringWeight = false
