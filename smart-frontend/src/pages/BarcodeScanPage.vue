@@ -7,7 +7,7 @@ import Footer from '@/components/Footer.vue'
 import FooterButton from '@/components/FooterButton.vue'
 import Input from '@/components/Input.vue'
 import { useMeasureStore } from '@/stores/measure'
-import useZeroApi from '@/composables/zero-api'
+import { useZeroApi } from '@/composables/zero-api'
 import { useNotificationStore } from '@/stores/notification'
 
 const props = defineProps<{

@@ -1,4 +1,4 @@
-type GetSkuResponse = {
+export type GetSkuResponse = {
     ERROR_CODE: string;
     DATA: {
         SKU: [{
@@ -18,7 +18,7 @@ type GetSkuResponse = {
     }
 }
 
-const useZeroApi = () => {
+export const useZeroApi = () => {
     const getSku = async (pack_id: string, barcode: string): Promise<GetSkuResponse | null> => {
         try {
             const response = await fetch(`/api/zero-api/sku?pack_id=${pack_id}&barcode=${barcode}`);
@@ -36,5 +36,3 @@ const useZeroApi = () => {
         getSku
     }
 }
-
-export default useZeroApi;

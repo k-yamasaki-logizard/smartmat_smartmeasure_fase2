@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import type { MeasureMode, StoredDataItem, StoredDataRecord } from './types'
-import { useNotificationStore } from './notification'
+import { useSmartMat } from '@/composables/smart-mat'
 
 function pad2(n: number): string {
   return ('0' + n).slice(-2)
@@ -27,8 +27,6 @@ export const useMeasureStore = defineStore('measure', {
     editingItemId: '',
     /** 測定済み商品（storeId をキーにしたオブジェクト、作業中〜確定済みを含む） */
     storedData: {} as StoredDataRecord,
-    /** 重量測定中(Smart Mat使用中フラグ) */
-    isMeasuringWeight: false,
   }),
 
   getters: {
@@ -44,6 +42,10 @@ export const useMeasureStore = defineStore('measure', {
       if (!this.editingItemId) return null
       return this.storedData[this.editingItemId] ?? null
     },
+    /** 測定中の商品が 1 件でもあるか */
+    hasMeasuringWeightItem(): boolean {
+      return Object.values(this.storedData).some((item: StoredDataItem) => item.weightMeasuringStatus === 'measuring')
+    },
   },
 
   actions: {
@@ -52,7 +54,6 @@ export const useMeasureStore = defineStore('measure', {
       this.mode = mode
       this.editingItemId = ''
       this.storedData = {}
-      this.isMeasuringWeight = false
     },
 
     /**
@@ -67,7 +68,7 @@ export const useMeasureStore = defineStore('measure', {
         width: '',
         height: '',
         weight: '',
-        isMeasuringWeight: false,
+        weightMeasuringStatus: 'not_measured',
       }
       this.storedData[item.tempItemId] = item
       this.editingItemId = item.tempItemId
@@ -110,18 +111,52 @@ export const useMeasureStore = defineStore('measure', {
     },
 
     /**
-     * 編集中の item の重量測定を行う（weight / isMeasuringWeight を更新）
+     * 編集中の item の重量測定を行う（weight / weightMeasuringStatus を更新）
      */
     async updateEditingItemWeight() {
+      const currentTime = new Date().getTime();
       const item = this.storedData[this.editingItemId]
       if (!item) return
-      this.isMeasuringWeight = true
-      item.isMeasuringWeight = true
-      await new Promise((resolve) => setTimeout(resolve, 30 * 1000))
-      useNotificationStore().show(`【商品名：${item.itemName}】\n重量測定が完了しました`)
-      item.weight = Math.floor(Math.random() * 1000000).toString()
-      item.isMeasuringWeight = false
-      this.isMeasuringWeight = false
+      item.weightMeasuringStatus = 'measuring'
+
+      try {
+
+        // SmartMatのAPI反映を待つ
+        // 1. 10秒待つ
+        // 2. /api/smartmat-api/latest-measure-history を呼び出す
+        // 3. measuredAtが2026-02-04 00:10:45+09:00の形式で得られる
+        // 4. measuredAtが計測開始時刻以後になるか、1分経つまでポーリングする(10秒ごと)
+        let latestMeasureHistory = null;
+
+        do {
+          await new Promise((resolve) => setTimeout(resolve, 10 * 1000))
+
+          latestMeasureHistory = await useSmartMat().getLatestMeasureHistory()
+
+          if (new Date().getTime() >= currentTime + 60 * 1000) {
+            throw new Error('timeout')
+          }
+
+          if (!latestMeasureHistory) {
+            throw new Error('api')
+          }
+        } while (new Date(latestMeasureHistory.measuredAt).getTime() < currentTime)
+
+        item.weight = latestMeasureHistory.current.toString()
+        item.weightMeasuringStatus = 'measured'
+        return {
+          success: true,
+          itemName: item.itemName,
+          weight: item.weight,
+        }
+      } catch (error) {
+        item.weightMeasuringStatus = 'failed'
+        return {
+          success: false,
+          error: error instanceof Error ? (error.message as 'timeout' | 'api') : 'unknown',
+          itemName: item.itemName,
+        }
+      }
     },
 
     /**

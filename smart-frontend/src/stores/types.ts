@@ -24,7 +24,7 @@ export interface StoredDataItem {
   width: string
   height: string
   weight: string
-  isMeasuringWeight: boolean
+  weightMeasuringStatus: 'not_measured' | 'measuring' | 'measured' | 'failed'
   measuredAt?: string
 }
 
@@ -37,3 +37,13 @@ export type StoredData = StoredDataItem[]
  * 測定済み商品を storeId でキーにしたオブジェクト（store の state 用）
  */
 export type StoredDataRecord = Record<string, StoredDataItem>
+
+/**
+ * 重量測定時の結果オブジェクト
+ */
+export type WeightMeasurementResult = {
+  success: boolean
+  error?: 'timeout' | 'api'
+  itemName?: string
+  weight?: string
+}

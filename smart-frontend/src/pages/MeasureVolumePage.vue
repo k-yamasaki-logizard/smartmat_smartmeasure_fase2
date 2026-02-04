@@ -3,7 +3,7 @@
  * 容積(3M)測定ページ（共通）
  * 縦・横・高さを入力し、確定で編集アイテムを更新して次画面へ遷移する
  */
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import Title from '@/components/Title.vue'
 import BackButton from '@/components/BackButton.vue'
@@ -27,8 +27,6 @@ const router = useRouter()
 const measureStore = useMeasureStore()
 const settingsStore = useSettingsStore()
 const notification = useNotificationStore()
-
-const itemName = computed(() => measureStore.editingItem?.itemName ?? '')
 
 const length = ref('')
 const width = ref('')
@@ -60,7 +58,7 @@ const handleConfirm = (): void => {
     <span>商品の3M(縦/横/高さ)を</span>
     <span>計測してください</span>
   </div>
-  <p class="font-bold w-full text-left mb-4">商品名: {{ itemName }}</p>
+  <p class="font-bold w-full text-left mb-4">商品名: {{ measureStore.editingItem?.itemName ?? '' }}</p>
   <Input v-model="length" label="縦:" class="mb-2" />
   <Input v-model="width" label="横:" class="mb-2" />
   <Input v-model="height" label="高さ:" class="mb-2" />

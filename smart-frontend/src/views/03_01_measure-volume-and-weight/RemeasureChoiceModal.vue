@@ -73,7 +73,8 @@ function chooseWeight(): void {
         <template v-if="mode === 'volume-and-weight' || mode === 'weight'">
           <div class="flex gap-1 items-center">
             <span class="text-[#4caf50] w-[56px] shrink-0">重量:</span>
-            <span v-if="item.isMeasuringWeight">(測定中...)</span>
+            <span v-if="item.weightMeasuringStatus === 'measuring'">(測定中...)</span>
+            <span v-else-if="item.weightMeasuringStatus === 'failed'">(測定失敗)</span>
             <span v-else>{{ item.weight }}</span>
           </div>
         </template>

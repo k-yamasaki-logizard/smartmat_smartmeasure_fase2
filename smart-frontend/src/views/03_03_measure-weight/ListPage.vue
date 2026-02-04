@@ -46,7 +46,8 @@ function handleRemeasure(item: StoredDataItem): void {
                   </div>
                   <div class="flex gap-1 items-center">
                     <span class="text-[#4caf50] text-right w-[70px] shrink-0">重量:</span>
-                    <span v-if="item.isMeasuringWeight">(測定中...)</span>
+                    <span v-if="item.weightMeasuringStatus === 'measuring'">(測定中...)</span>
+                    <span v-else-if="item.weightMeasuringStatus === 'failed'">(測定失敗)</span>
                     <span v-else>{{ item.weight }}</span>
                   </div>
                   <div class="flex gap-1 whitespace-nowrap">

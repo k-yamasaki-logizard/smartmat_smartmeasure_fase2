@@ -9,6 +9,12 @@ builder.Services.Configure<ZeroApiOptions>(builder.Configuration.GetSection(Zero
 // ZERO API クライアント（Typed Client）
 builder.Services.AddHttpClient<IZeroApiClient, ZeroApiClient>();
 
+// Smart Mat API 設定のバインド
+builder.Services.Configure<SmartMatOptions>(builder.Configuration.GetSection(SmartMatOptions.SectionName));
+
+// Smart Mat API クライアント（Typed Client）
+builder.Services.AddHttpClient<ISmartMatApiClient, SmartMatApiClient>();
+
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddControllers();

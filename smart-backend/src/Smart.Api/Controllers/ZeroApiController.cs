@@ -1,6 +1,7 @@
 // ZeroApiController.cs
-// ZERO API のプロキシエンドポイント。ルール: /zero-api/[path]
+// ZERO API のプロキシエンドポイント。ルール: /zero-api/[path]。server.js の itemPackageWeight / itemPackageSize 相当。
 
+using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using Smart.Api.Clients;
 
@@ -25,10 +26,10 @@ public class ZeroApiController : ControllerBase
     }
 
     /// <summary>
-    /// GET /zero-api/sku?barcode= でバーコードからSKU情報を取得する。
+    /// GET /zero-api/sku（pack_id, barcode クエリ） でバーコードからSKU情報を取得する。
     /// </summary>
-    /// <param name="path">ルートの path（例: sku）</param>
-    /// <param name="barcode">バーコード（path が sku のとき必須）</param>
+    /// <param name="pack_id">梱包形態ID</param>
+    /// <param name="barcode">バーコード</param>
     /// <param name="cancellationToken">キャンセルトークン</param>
     /// <returns>SKU情報、または 400/404</returns>
     [HttpGet]
@@ -44,4 +45,63 @@ public class ZeroApiController : ControllerBase
         var result = await _zeroApiClient.GetSkuAsync(pack_id, barcode.Trim(), cancellationToken);
         return Ok(result);
     }
+
+    /// <summary>
+    /// POST /zero-api/itemPackageWeight で梱包形態（重量）を更新する。server.js の POST /api/itemPackageWeight 相当。
+    /// </summary>
+    /// <param name="body">itemId, caseBarcode, caseWeight</param>
+    /// <param name="cancellationToken">キャンセルトークン</param>
+    /// <returns>更新結果、ERROR_CODE が "0" でない場合は 400</returns>
+    [HttpPost]
+    [Route("item-package-weight")]
+    [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> PostItemPackageWeight(
+        [FromBody] ItemPackageWeightRequest body,
+        CancellationToken cancellationToken)
+    {
+        var result = await _zeroApiClient.UpdatePackageWeightAsync(
+            body.ItemId ?? "",
+            body.CaseBarcode ?? "",
+            body.CaseWeight ?? "",
+            cancellationToken);
+        return CheckErrorAndReturn(result);
+    }
+
+    /// <summary>
+    /// POST /zero-api/itemPackageSize で梱包形態（サイズ）を更新する。server.js の POST /api/itemPackageSize 相当。
+    /// </summary>
+    /// <param name="body">itemId, caseBarcode, caseLength, caseWidth, caseHeight</param>
+    /// <param name="cancellationToken">キャンセルトークン</param>
+    /// <returns>更新結果、ERROR_CODE が "0" でない場合は 400</returns>
+    [HttpPost]
+    [Route("item-package-size")]
+    [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> PostItemPackageSize(
+        [FromBody] ItemPackageSizeRequest body,
+        CancellationToken cancellationToken)
+    {
+        var result = await _zeroApiClient.UpdatePackageSizeAsync(
+            body.ItemId ?? "",
+            body.CaseBarcode ?? "",
+            body.CaseLength ?? "",
+            body.CaseWidth ?? "",
+            body.CaseHeight ?? "",
+            cancellationToken);
+        return CheckErrorAndReturn(result);
+    }
+
+    private static IActionResult CheckErrorAndReturn(object? result)
+    {
+        if (result is JsonElement elem && elem.TryGetProperty("ERROR_CODE", out var code) && code.GetString() != "0")
+            return new BadRequestObjectResult(result);
+        return new OkObjectResult(result);
+    }
 }
+
+/// <summary>梱包形態（重量）更新のリクエスト body</summary>
+public record ItemPackageWeightRequest(string? ItemId, string? CaseBarcode, string? CaseWeight);
+
+/// <summary>梱包形態（サイズ）更新のリクエスト body</summary>
+public record ItemPackageSizeRequest(string? ItemId, string? CaseBarcode, string? CaseLength, string? CaseWidth, string? CaseHeight);
