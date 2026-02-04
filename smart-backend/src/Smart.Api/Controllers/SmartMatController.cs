@@ -40,4 +40,14 @@ public class SmartMatController : ControllerBase
             return NotFound();
         return Ok(result);
     }
+
+    [HttpGet]
+    [Route("stock-info")]
+    [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetStockInfo(CancellationToken cancellationToken)
+    {
+        var result = await _smartMatApiClient.FetchStockInfoAsync(cancellationToken);
+        return Ok(result);
+    }
 }

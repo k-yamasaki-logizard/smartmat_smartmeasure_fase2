@@ -14,4 +14,11 @@ public interface ISmartMatApiClient
     /// <param name="cancellationToken">キャンセルトークン</param>
     /// <returns>measureHistories[0] に相当するオブジェクト、存在しない場合は null</returns>
     Task<object?> FetchLatestMeasureHistoryAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 在庫情報を取得する（v1/device/info?id=...）
+    /// </summary>
+    /// <param name="cancellationToken">キャンセルトークン</param>
+    /// <returns>在庫情報、存在しない場合は null</returns>
+    Task<object?> FetchStockInfoAsync(CancellationToken cancellationToken = default);
 }

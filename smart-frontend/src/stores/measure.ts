@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import type { MeasureMode, StoredDataItem, StoredDataRecord } from './types'
 import { useSmartMat } from '@/composables/smart-mat'
 import { useZeroApi } from '@/composables/zero-api'
+import type { ItemPackageSizeRequest, ItemPackageWeightRequest, ItemPackageWeightAndSizeRequest } from '@/composables/zero-api'
 
 function pad2(n: number): string {
   return ('0' + n).slice(-2)
@@ -125,26 +126,24 @@ export const useMeasureStore = defineStore('measure', {
 
         // SmartMatのAPI反映を待つ
         // 1. 10秒待つ
-        // 2. /api/smartmat-api/latest-measure-history を呼び出す
+        // 2. /api/smartmat-api/stock-info を呼び出す
         // 3. measuredAtが2026-02-04 00:10:45+09:00の形式で得られる
         // 4. measuredAtが計測開始時刻以後になるか、1分経つまでポーリングする(10秒ごと)
-        let latestMeasureHistory = null;
+        let stockInfo = null;
 
         do {
           await new Promise((resolve) => setTimeout(resolve, 10 * 1000))
 
-          latestMeasureHistory = await useSmartMat().getLatestMeasureHistory()
-
+          stockInfo = await useSmartMat().getStockInfo()
+          if (!stockInfo) {
+            throw new Error('api')
+          }
           if (new Date().getTime() >= currentTime + 120 * 1000) {
             throw new Error('timeout')
           }
+        } while (new Date(stockInfo.deviceMeasurement.measuredAt).getTime() <= currentTime)
 
-          if (!latestMeasureHistory) {
-            throw new Error('api')
-          }
-        } while (new Date(latestMeasureHistory.measuredAt).getTime() < currentTime)
-
-        item.weight = latestMeasureHistory.current.toString()
+        item.weight = stockInfo.subscriptionMeasurement.current.toString()
         item.weightMeasuringStatus = 'measured'
         return {
           success: true,
@@ -174,30 +173,41 @@ export const useMeasureStore = defineStore('measure', {
      * 成功時に storedData と editingTempId をクリアする
      */
     async submitItems(): Promise<void> {
-      const updateItemPackWeightRequests = Object.values<StoredDataItem>(this.storedData).map<ItemPackageWeightRequest>((item: StoredDataItem) => ({
-        itemId: item.itemId,
-        caseBarcode: item.barcode,
-        caseWeight: item.weight,
-      }));
-
-      const updateItemPackSizeRequests = Object.values<StoredDataItem>(this.storedData).map<ItemPackageSizeRequest>((item: StoredDataItem) => ({
-        itemId: item.itemId,
-        caseBarcode: item.barcode,
-        caseLength: item.length,
-        caseWidth: item.width,
-        caseHeight: item.height,
-      }));
-
-      if (this.mode === 'volume-and-weight') {
-        await useZeroApi().updateItemPackageWeight(updateItemPackWeightRequests)
-        await useZeroApi().updateItemPackageSize(updateItemPackSizeRequests)
-      } else if (this.mode === 'volume') {
-        await useZeroApi().updateItemPackageSize(updateItemPackSizeRequests)
-      } else if (this.mode === 'weight') {
-        await useZeroApi().updateItemPackageWeight(updateItemPackWeightRequests)
+      let result = null;
+      switch (this.mode) {
+        case 'volume-and-weight':
+          const updateItemPackWeightAndSizeRequests = Object.values<StoredDataItem>(this.storedData).map<ItemPackageWeightAndSizeRequest>((item: StoredDataItem) => ({
+            itemId: item.itemId,
+            caseBarcode: item.barcode,
+            caseWeight: item.weight,
+            caseLength: item.length,
+            caseWidth: item.width,
+            caseHeight: item.height,
+          }));
+          result = await useZeroApi().updateItemPackageWeightAndSize(updateItemPackWeightAndSizeRequests)
+          break
+        case 'volume':
+          const updateItemPackSizeRequests = Object.values<StoredDataItem>(this.storedData).map<ItemPackageSizeRequest>((item: StoredDataItem) => ({
+            itemId: item.itemId,
+            caseBarcode: item.barcode,
+            caseLength: item.length,
+            caseWidth: item.width,
+            caseHeight: item.height,
+          }));
+          result = await useZeroApi().updateItemPackageSize(updateItemPackSizeRequests)
+          break
+        case 'weight':
+          const updateItemPackWeightRequests = Object.values<StoredDataItem>(this.storedData).map<ItemPackageWeightRequest>((item: StoredDataItem) => ({
+            itemId: item.itemId,
+            caseBarcode: item.barcode,
+            caseWeight: item.weight,
+          }));
+          result = await useZeroApi().updateItemPackageWeight(updateItemPackWeightRequests)
+          break
       }
       this.storedData = {}
       this.editingTempId = ''
+      return result;
     },
   },
 })

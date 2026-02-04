@@ -53,4 +53,21 @@ public class SmartMatApiClient : ISmartMatApiClient
 
         return JsonSerializer.Deserialize<JsonElement>(histories[0].GetRawText());
     }
+
+    public async Task<object?> FetchStockInfoAsync(CancellationToken cancellationToken = default)
+    {
+        var url = $"{BaseUrl}/v1/device/info?id={Uri.EscapeDataString(_options.DeviceId ?? "")}";
+        using var request = new HttpRequestMessage(HttpMethod.Get, url);
+        request.Headers.Add("X-SmartMat-Key", _options.ApiKey ?? "");
+
+        using var response = await _httpClient.SendAsync(request, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+            throw new InvalidOperationException($"Smart Mat API error: {response.StatusCode}");
+
+        var json = await response.Content.ReadAsStringAsync(cancellationToken);
+        if (string.IsNullOrWhiteSpace(json))
+            return null;
+
+        return JsonSerializer.Deserialize<JsonElement>(json);
+    }
 }

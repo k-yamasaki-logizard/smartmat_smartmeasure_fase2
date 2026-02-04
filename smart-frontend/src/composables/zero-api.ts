@@ -38,11 +38,21 @@ export type ImportResponse = {
     };
 }
 
+export type ItemPackageWeightAndSizeRequest = {
+    itemId: string;
+    caseBarcode: string;
+    caseWeight: string;
+    caseLength: string;
+    caseWidth: string;
+    caseHeight: string;
+}
+
 export type ItemPackageWeightRequest = {
     itemId: string;
     caseBarcode: string;
     caseWeight: string;
 }
+
 export type ItemPackageSizeRequest = {
     itemId: string;
     caseBarcode: string;
@@ -64,6 +74,20 @@ export const useZeroApi = () => {
             console.error(error);
             return null;
         }
+    }
+
+    const updateItemPackageWeightAndSize = async (request: ItemPackageWeightAndSizeRequest[]): Promise<ImportResponse> => {
+        const response = await fetch(`/api/zero-api/item-package-weight-and-size`, {
+            method: 'POST',
+            body: JSON.stringify(request),
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+        if (!response.ok) {
+            throw new Error('Failed to update item package weight and size');
+        }
+        return response.json() as Promise<ImportResponse>;
     }
 
     const updateItemPackageWeight = async (request: ItemPackageWeightRequest[]): Promise<ImportResponse> => {
@@ -96,6 +120,7 @@ export const useZeroApi = () => {
 
     return {
         getSku,
+        updateItemPackageWeightAndSize,
         updateItemPackageWeight,
         updateItemPackageSize,
     }

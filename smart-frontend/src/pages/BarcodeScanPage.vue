@@ -9,6 +9,7 @@ import Input from '@/components/Input.vue'
 import { useMeasureStore } from '@/stores/measure'
 import { useZeroApi } from '@/composables/zero-api'
 import { useNotificationStore } from '@/stores/notification'
+import { useLoadingStore } from '@/stores/loading'
 
 const props = defineProps<{
     backTo: string,
@@ -29,17 +30,22 @@ const measureStore = useMeasureStore();
 
 const handleConfirm = async () => {
   // 暫定的に、pack_barcode=3で固定
-  const sku = await zeroApi.getSku(props.packId, barcode.value)
-  if(sku?.ERROR_CODE === "6") {
-    notification.show('バーコード未登録の商品です。\nロジザードZEROで商品/バーコードを登録後、再度読み取ってください。')
-    return
+  try {
+    useLoadingStore().show()
+    const sku = await zeroApi.getSku(props.packId, barcode.value)
+    if(sku?.ERROR_CODE === "6") {
+        throw new Error('バーコード未登録の商品です。\nロジザードZEROで商品/バーコードを登録後、再度読み取ってください。')
+    }
+    if(sku?.ERROR_CODE !== "0") {
+        throw new Error(sku?.ERROR_MESSAGE)
+    }
+    measureStore.addEditingItem(barcode.value, sku.DATA.SKU[0].ITEM_ID, sku.DATA.SKU[0].ITEM_NAME)
+    router.push(props.nextTo)
+  } catch (error) {
+    notification.show(`バーコードの読み取りでエラーが発生しました(${error})`)
+  } finally {
+    useLoadingStore().hide()
   }
-  if(sku?.ERROR_CODE !== "0") {
-    notification.show('バーコードの読み取りでエラーが発生しました')
-    return
-  }
-  measureStore.addEditingItem(barcode.value, sku.DATA.SKU[0].ITEM_ID, sku.DATA.SKU[0].ITEM_NAME)
-  router.push(props.nextTo)
 }
 
 onMounted(() => {

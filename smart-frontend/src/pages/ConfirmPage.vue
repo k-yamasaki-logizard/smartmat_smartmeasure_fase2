@@ -12,6 +12,7 @@ import Footer from '@/components/Footer.vue'
 import FixedScrollLayout from '@/layouts/FixedScrollLayout.vue'
 import { useMeasureStore } from '@/stores/measure'
 import type { StoredDataItem } from '@/stores/types'
+import { useLoadingStore } from '@/stores/loading'
 
 /** 表示モード: 容積+重量 | 容積のみ | 重量のみ（カードに表示する項目を切り替え） */
 export type ConfirmDisplayMode = 'volume-and-weight' | 'volume' | 'weight'
@@ -35,9 +36,21 @@ function displayNumber(item: StoredDataItem & { number?: number }, index: number
   return n != null ? Number(n) : index + 1
 }
 
-const handleConfirm = (): void => {
-  measureStore.submitItems()
-  router.push(props.finishTo)
+const handleConfirm = async (): Promise<void> => {
+  try {
+    useLoadingStore().show()
+    const result = await measureStore.submitItems()
+    if (result?.ERROR_CODE !== "0") {
+      throw new Error(result?.ERROR_MESSAGE)
+    }
+    router.push(props.finishTo)
+  } catch (error) {
+    useNotificationStore().show(`商品マスタ登録/更新に失敗しました(${error})`)
+    return
+  }
+  finally {
+    useLoadingStore().hide()
+  }
 }
 </script>
 

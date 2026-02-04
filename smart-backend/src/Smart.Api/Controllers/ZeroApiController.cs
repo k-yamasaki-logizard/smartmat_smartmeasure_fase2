@@ -101,6 +101,35 @@ public class ZeroApiController : ControllerBase
         return CheckErrorAndReturn(result);
     }
 
+    /// <summary>
+    /// POST /zero-api/item-package-weight-and-size で梱包形態（重量とサイズ）を更新する。複数件を配列で送信可能。
+    /// </summary>
+    /// <param name="body">itemId, caseBarcode, caseWeight, caseLength, caseWidth, caseHeight の配列（空の場合は 400）</param>
+    /// <param name="cancellationToken">キャンセルトークン</param>
+    /// <returns>更新結果、ERROR_CODE が "0" でない場合は 400</returns>
+    [HttpPost]
+    [Route("item-package-weight-and-size")]
+    [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> PostItemPackageWeightAndSize(
+        [FromBody] ItemPackageWeightAndSizeRequest[]? body,
+        CancellationToken cancellationToken)
+    {
+        if (body == null || body.Length == 0)
+            return BadRequest(new { error = "At least one item is required." });
+
+        var items = body.Select(b => new PackageWeightAndSizeItem(
+            b.ItemId ?? "",
+            b.CaseBarcode ?? "",
+            b.CaseWeight ?? "",
+            b.CaseLength ?? "",
+            b.CaseWidth ?? "",
+            b.CaseHeight ?? "")).ToList();
+
+        var result = await _zeroApiClient.UpdatePackageWeightAndSizeAsync(items, cancellationToken);
+        return CheckErrorAndReturn(result);
+    }
+
     private static IActionResult CheckErrorAndReturn(object? result)
     {
         if (result is JsonElement elem && elem.TryGetProperty("ERROR_CODE", out var code) && code.GetString() != "0")
@@ -114,3 +143,6 @@ public record ItemPackageWeightRequest(string? ItemId, string? CaseBarcode, stri
 
 /// <summary>梱包形態（サイズ）更新のリクエスト body</summary>
 public record ItemPackageSizeRequest(string? ItemId, string? CaseBarcode, string? CaseLength, string? CaseWidth, string? CaseHeight);
+
+/// <summary>梱包形態（重量とサイズ）更新のリクエスト body</summary>
+public record ItemPackageWeightAndSizeRequest(string? ItemId, string? CaseBarcode, string? CaseWeight, string? CaseLength, string? CaseWidth, string? CaseHeight);
