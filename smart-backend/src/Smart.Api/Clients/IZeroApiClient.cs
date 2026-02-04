@@ -1,7 +1,15 @@
 // IZeroApiClient.cs
 // ZERO API 呼び出しのインターフェース（zero-api-client.js 準拠）
 
+using System.Collections.Generic;
+
 namespace Smart.Api.Clients;
+
+/// <summary>梱包形態（重量）更新の 1 件分</summary>
+public record PackageWeightItem(string ItemId, string CaseBarcode, string CaseWeight);
+
+/// <summary>梱包形態（サイズ）更新の 1 件分</summary>
+public record PackageSizeItem(string ItemId, string CaseBarcode, string CaseLength, string CaseWidth, string CaseHeight);
 
 /// <summary>
 /// ZERO API を呼び出すクライアントのインターフェース
@@ -16,24 +24,18 @@ public interface IZeroApiClient
     Task<object?> AuthAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// 梱包形態(重量)を更新する（common/import/import, FILE_ID 2115, PTRN_ID 0）
+    /// 梱包形態(重量)を更新する（common/import/import, FILE_ID 2115, PTRN_ID 0）。複数件を 1 リクエストで送信可能。
     /// </summary>
-    /// <param name="itemId">商品ID</param>
-    /// <param name="caseBarcode">ケースバーコード</param>
-    /// <param name="caseWeight">ケース_重量（SKU単位）</param>
+    /// <param name="items">更新する件の一覧（空の場合は ArgumentException）</param>
     /// <param name="cancellationToken">キャンセルトークン</param>
-    Task<object?> UpdatePackageWeightAsync(string itemId, string caseBarcode, string caseWeight, CancellationToken cancellationToken = default);
+    Task<object?> UpdatePackageWeightAsync(IReadOnlyList<PackageWeightItem> items, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// 梱包形態(サイズ)を更新する（common/import/import, FILE_ID 2115, PTRN_ID 1）
+    /// 梱包形態(サイズ)を更新する（common/import/import, FILE_ID 2115, PTRN_ID 1）。複数件を 1 リクエストで送信可能。
     /// </summary>
-    /// <param name="itemId">商品ID</param>
-    /// <param name="caseBarcode">ケースバーコード</param>
-    /// <param name="caseLength">ケース_縦（SKU単位）</param>
-    /// <param name="caseWidth">ケース_横（SKU単位）</param>
-    /// <param name="caseHeight">ケース_高さ（SKU単位）</param>
+    /// <param name="items">更新する件の一覧（空の場合は ArgumentException）</param>
     /// <param name="cancellationToken">キャンセルトークン</param>
-    Task<object?> UpdatePackageSizeAsync(string itemId, string caseBarcode, string caseLength, string caseWidth, string caseHeight, CancellationToken cancellationToken = default);
+    Task<object?> UpdatePackageSizeAsync(IReadOnlyList<PackageSizeItem> items, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// バーコードからSKU情報を取得する（zero-api-client.js には未実装、コントローラー用）

@@ -1,6 +1,7 @@
 // ZeroApiController.cs
 // ZERO API のプロキシエンドポイント。ルール: /zero-api/[path]。server.js の itemPackageWeight / itemPackageSize 相当。
 
+using System.Linq;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using Smart.Api.Clients;
@@ -47,9 +48,9 @@ public class ZeroApiController : ControllerBase
     }
 
     /// <summary>
-    /// POST /zero-api/itemPackageWeight で梱包形態（重量）を更新する。server.js の POST /api/itemPackageWeight 相当。
+    /// POST /zero-api/item-package-weight で梱包形態（重量）を更新する。複数件を配列で送信可能。
     /// </summary>
-    /// <param name="body">itemId, caseBarcode, caseWeight</param>
+    /// <param name="body">itemId, caseBarcode, caseWeight の配列（空の場合は 400）</param>
     /// <param name="cancellationToken">キャンセルトークン</param>
     /// <returns>更新結果、ERROR_CODE が "0" でない場合は 400</returns>
     [HttpPost]
@@ -57,21 +58,25 @@ public class ZeroApiController : ControllerBase
     [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> PostItemPackageWeight(
-        [FromBody] ItemPackageWeightRequest body,
+        [FromBody] ItemPackageWeightRequest[]? body,
         CancellationToken cancellationToken)
     {
-        var result = await _zeroApiClient.UpdatePackageWeightAsync(
-            body.ItemId ?? "",
-            body.CaseBarcode ?? "",
-            body.CaseWeight ?? "",
-            cancellationToken);
+        if (body == null || body.Length == 0)
+            return BadRequest(new { error = "At least one item is required." });
+
+        var items = body.Select(b => new PackageWeightItem(
+            b.ItemId ?? "",
+            b.CaseBarcode ?? "",
+            b.CaseWeight ?? "")).ToList();
+
+        var result = await _zeroApiClient.UpdatePackageWeightAsync(items, cancellationToken);
         return CheckErrorAndReturn(result);
     }
 
     /// <summary>
-    /// POST /zero-api/itemPackageSize で梱包形態（サイズ）を更新する。server.js の POST /api/itemPackageSize 相当。
+    /// POST /zero-api/item-package-size で梱包形態（サイズ）を更新する。複数件を配列で送信可能。
     /// </summary>
-    /// <param name="body">itemId, caseBarcode, caseLength, caseWidth, caseHeight</param>
+    /// <param name="body">itemId, caseBarcode, caseLength, caseWidth, caseHeight の配列（空の場合は 400）</param>
     /// <param name="cancellationToken">キャンセルトークン</param>
     /// <returns>更新結果、ERROR_CODE が "0" でない場合は 400</returns>
     [HttpPost]
@@ -79,16 +84,20 @@ public class ZeroApiController : ControllerBase
     [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> PostItemPackageSize(
-        [FromBody] ItemPackageSizeRequest body,
+        [FromBody] ItemPackageSizeRequest[]? body,
         CancellationToken cancellationToken)
     {
-        var result = await _zeroApiClient.UpdatePackageSizeAsync(
-            body.ItemId ?? "",
-            body.CaseBarcode ?? "",
-            body.CaseLength ?? "",
-            body.CaseWidth ?? "",
-            body.CaseHeight ?? "",
-            cancellationToken);
+        if (body == null || body.Length == 0)
+            return BadRequest(new { error = "At least one item is required." });
+
+        var items = body.Select(b => new PackageSizeItem(
+            b.ItemId ?? "",
+            b.CaseBarcode ?? "",
+            b.CaseLength ?? "",
+            b.CaseWidth ?? "",
+            b.CaseHeight ?? "")).ToList();
+
+        var result = await _zeroApiClient.UpdatePackageSizeAsync(items, cancellationToken);
         return CheckErrorAndReturn(result);
     }
 

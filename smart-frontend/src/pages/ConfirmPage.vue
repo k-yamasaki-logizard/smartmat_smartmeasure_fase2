@@ -53,7 +53,7 @@ const handleConfirm = (): void => {
       </div>
     </template>
     <template #scrollable>
-      <div class="w-full" v-for="(item, index) in items" :key="item.tempItemId">
+      <div class="w-full" v-for="(item, index) in items" :key="item.tempId">
         <Card :backgroundColor="(Number(index) + 1) % 2 === 0 ? 'gray' : 'white'">
           <template #content>
             <div class="flex flex-row items-center">

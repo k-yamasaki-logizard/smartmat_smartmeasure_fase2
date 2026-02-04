@@ -42,7 +42,7 @@ function onRemeasureModalUpdateShow(value: boolean): void {
       </Title>
     </template>
     <template #scrollable>
-      <div v-for="(item, index) in items" :key="item.tempItemId" class="w-full">
+      <div v-for="(item, index) in items" :key="item.tempId" class="w-full">
         <Card :backgroundColor="(index + 1) % 2 === 0 ? 'gray' : 'white'">
           <template #content>
             <div class="flex flex-row items-center gap-2 w-full">

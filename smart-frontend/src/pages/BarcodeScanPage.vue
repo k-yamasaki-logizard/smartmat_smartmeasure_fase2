@@ -38,7 +38,7 @@ const handleConfirm = async () => {
     notification.show('バーコードの読み取りでエラーが発生しました')
     return
   }
-  measureStore.addEditingItem(barcode.value, sku.DATA.SKU[0].ITEM_NAME)
+  measureStore.addEditingItem(barcode.value, sku.DATA.SKU[0].ITEM_ID, sku.DATA.SKU[0].ITEM_NAME)
   router.push(props.nextTo)
 }
 

@@ -18,6 +18,39 @@ export type GetSkuResponse = {
     }
 }
 
+export type ImportResponse = {
+    ERROR_CODE: string;
+    DATA: {
+        RESULT: {
+            UNIQUE_CODE: string;
+            CREATE_DTTM: string;
+            TOTAL_REC: string;
+            CAPTYRE_REC: string;
+            IGNORE_REC: string;
+            ERR_REC: string;
+            ERROR_DETAIL: {
+                LINE: string;
+                ERROR_MESSAGE: string;
+                COLUMN: string;
+                KEY_INFO: string;
+            }[];
+        };
+    };
+}
+
+export type ItemPackageWeightRequest = {
+    itemId: string;
+    caseBarcode: string;
+    caseWeight: string;
+}
+export type ItemPackageSizeRequest = {
+    itemId: string;
+    caseBarcode: string;
+    caseLength: string;
+    caseWidth: string;
+    caseHeight: string;
+}
+
 export const useZeroApi = () => {
     const getSku = async (pack_id: string, barcode: string): Promise<GetSkuResponse | null> => {
         try {
@@ -32,7 +65,38 @@ export const useZeroApi = () => {
             return null;
         }
     }
+
+    const updateItemPackageWeight = async (request: ItemPackageWeightRequest[]): Promise<ImportResponse> => {
+        const response = await fetch(`/api/zero-api/item-package-weight`, {
+            method: 'POST',
+            body: JSON.stringify(request),
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+        if (!response.ok) {
+            throw new Error('Failed to update item package weight');
+        }
+        return response.json() as Promise<ImportResponse>;
+    }
+
+    const updateItemPackageSize = async (request: ItemPackageSizeRequest[]): Promise<ImportResponse> => {
+        const response = await fetch(`/api/zero-api/item-package-size`, {
+            method: 'POST',
+            body: JSON.stringify(request),
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+        if (!response.ok) {
+            throw new Error('Failed to update item package size');
+        }
+        return response.json() as Promise<ImportResponse>;
+    }
+
     return {
-        getSku
+        getSku,
+        updateItemPackageWeight,
+        updateItemPackageSize,
     }
 }

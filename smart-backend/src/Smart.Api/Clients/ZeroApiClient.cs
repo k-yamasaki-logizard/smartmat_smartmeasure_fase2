@@ -1,6 +1,8 @@
 // ZeroApiClient.cs
 // ZERO API 呼び出しの実装（zero-api-client.js 準拠: auth, updatePackageWeight, updatePackageSize, getSku）
 
+using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Options;
@@ -54,9 +56,16 @@ public class ZeroApiClient : IZeroApiClient
     }
 
     /// <inheritdoc />
-    public async Task<object?> UpdatePackageWeightAsync(string itemId, string caseBarcode, string caseWeight, CancellationToken cancellationToken = default)
+    public async Task<object?> UpdatePackageWeightAsync(IReadOnlyList<PackageWeightItem> items, CancellationToken cancellationToken = default)
     {
+        if (items == null || items.Count == 0)
+            throw new ArgumentException("At least one item is required.", nameof(items));
+
         await EnsureAuthenticatedAsync(cancellationToken);
+
+        const string header = "\"商品ID\",\"ケースバーコード\",\"ケース_重量（SKU単位）\"";
+        var dataRows = items.Select(i => $"\"{EscapeCsvField(i.ItemId ?? "")}\",\"{EscapeCsvField(i.CaseBarcode ?? "")}\",\"{EscapeCsvField(i.CaseWeight ?? "")}\"");
+        var importData = new[] { header }.Concat(dataRows).ToArray();
 
         var url = $"{BaseUrl}/common/import/import";
         var body = JsonSerializer.Serialize(new
@@ -67,11 +76,7 @@ public class ZeroApiClient : IZeroApiClient
             FILE_ID = "2115",
             PTRN_ID = "0",
             ERROR_DETAIL = "1",
-            IMPORT_DATA = new[]
-            {
-                "\"商品ID\",\"ケースバーコード\",\"ケース_重量（SKU単位）\"",
-                $"\"{EscapeCsvField(itemId)}\",\"{EscapeCsvField(caseBarcode)}\",\"{EscapeCsvField(caseWeight ?? "")}\""
-            }
+            IMPORT_DATA = importData
         });
         using var request = new HttpRequestMessage(HttpMethod.Post, url);
         request.Headers.Add("Cookie", _sessionCookie);
@@ -86,9 +91,16 @@ public class ZeroApiClient : IZeroApiClient
     }
 
     /// <inheritdoc />
-    public async Task<object?> UpdatePackageSizeAsync(string itemId, string caseBarcode, string caseLength, string caseWidth, string caseHeight, CancellationToken cancellationToken = default)
+    public async Task<object?> UpdatePackageSizeAsync(IReadOnlyList<PackageSizeItem> items, CancellationToken cancellationToken = default)
     {
+        if (items == null || items.Count == 0)
+            throw new ArgumentException("At least one item is required.", nameof(items));
+
         await EnsureAuthenticatedAsync(cancellationToken);
+
+        const string header = "\"商品ID\",\"ケースバーコード\",\"ケース_縦（SKU単位）\",\"ケース_横（SKU単位）\",\"ケース_高さ（SKU単位）\"";
+        var dataRows = items.Select(i => $"\"{EscapeCsvField(i.ItemId ?? "")}\",\"{EscapeCsvField(i.CaseBarcode ?? "")}\",\"{EscapeCsvField(i.CaseLength ?? "")}\",\"{EscapeCsvField(i.CaseWidth ?? "")}\",\"{EscapeCsvField(i.CaseHeight ?? "")}\"");
+        var importData = new[] { header }.Concat(dataRows).ToArray();
 
         var url = $"{BaseUrl}/common/import/import";
         var body = JsonSerializer.Serialize(new
@@ -99,11 +111,7 @@ public class ZeroApiClient : IZeroApiClient
             FILE_ID = "2115",
             PTRN_ID = "1",
             ERROR_DETAIL = "1",
-            IMPORT_DATA = new[]
-            {
-                "\"商品ID\",\"ケースバーコード\",\"ケース_縦（SKU単位）\",\"ケース_横（SKU単位）\",\"ケース_高さ（SKU単位）\"",
-                $"\"{EscapeCsvField(itemId)}\",\"{EscapeCsvField(caseBarcode)}\",\"{EscapeCsvField(caseLength ?? "")}\",\"{EscapeCsvField(caseWidth ?? "")}\",\"{EscapeCsvField(caseHeight ?? "")}\""
-            }
+            IMPORT_DATA = importData
         });
         using var request = new HttpRequestMessage(HttpMethod.Post, url);
         request.Headers.Add("Cookie", _sessionCookie);

@@ -31,14 +31,14 @@ const measureStore = useMeasureStore()
 
 function chooseVolume(): void {
   if (!props.item) return
-  measureStore.setEditingItemById(props.item.tempItemId)
+  measureStore.setEditingItemById(props.item.tempId)
   emit('update:show', false)
   router.push('/update/volume-and-weight/measure-volume')
 }
 
 function chooseWeight(): void {
   if (!props.item) return
-  measureStore.setEditingItemById(props.item.tempItemId)
+  measureStore.setEditingItemById(props.item.tempId)
   emit('update:show', false)
   router.push('/update/volume-and-weight/measure-weight')
 }

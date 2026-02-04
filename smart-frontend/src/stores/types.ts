@@ -17,8 +17,9 @@ export type VolumeLongestSide = 'length' | 'width'
  * 測定済み商品 1件（storeId で一意、作業中〜確定済みを storedData で管理）
  */
 export interface StoredDataItem {
-  tempItemId: string
+  tempId: string
   barcode: string
+  itemId: string
   itemName: string
   length: string
   width: string

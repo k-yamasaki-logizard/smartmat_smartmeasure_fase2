@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import type { MeasureMode, StoredDataItem, StoredDataRecord } from './types'
 import { useSmartMat } from '@/composables/smart-mat'
+import { useZeroApi } from '@/composables/zero-api'
 
 function pad2(n: number): string {
   return ('0' + n).slice(-2)
@@ -13,7 +14,7 @@ function formatMeasuredAt(): string {
 
 /**
  * 測定ストア
- * editingItemId で「編集中」の StoredDataItem を指し、全件は storedData で管理
+ * editingTempId で「編集中」の StoredDataItem を指し、全件は storedData で管理
  * 
  * ※
  * 重量測定など、非同期で「編集中」か「測定済」の商品に更新を行う箇所があるので
@@ -23,8 +24,8 @@ export const useMeasureStore = defineStore('measure', {
   state: () => ({
     /** 測定モード */
     mode: 'volume-and-weight' as MeasureMode,
-    /** 編集中の StoredDataItem の tempItemId（空のときはなし） */
-    editingItemId: '',
+    /** 編集中の StoredDataItem の tempId（空のときはなし） */
+    editingTempId: '',
     /** 測定済み商品（storeId をキーにしたオブジェクト、作業中〜確定済みを含む） */
     storedData: {} as StoredDataRecord,
   }),
@@ -37,10 +38,10 @@ export const useMeasureStore = defineStore('measure', {
         number: i + 1,
       }))
     },
-    /** 編集中の 1 件（editingItemId に一致する StoredDataItem） */
+    /** 編集中の 1 件（editingTempId に一致する StoredDataItem） */
     editingItem(): StoredDataItem | null {
-      if (!this.editingItemId) return null
-      return this.storedData[this.editingItemId] ?? null
+      if (!this.editingTempId) return null
+      return this.storedData[this.editingTempId] ?? null
     },
     /** 測定中の商品が 1 件でもあるか */
     hasMeasuringWeightItem(): boolean {
@@ -52,17 +53,18 @@ export const useMeasureStore = defineStore('measure', {
 
     initialize(mode: MeasureMode) {
       this.mode = mode
-      this.editingItemId = ''
+      this.editingTempId = ''
       this.storedData = {}
     },
 
     /**
-     * 新規 1 件を開始（バーコードスキャン確定時）。storedData に追加し editingItemId をセット
+     * 新規 1 件を開始（バーコードスキャン確定時）。storedData に追加し editingTempId をセット
      */
-    addEditingItem(barcode: string, itemName: string) {
+    addEditingItem(barcode: string, itemId: string, itemName: string) {
       const item: StoredDataItem = {
-        tempItemId: crypto.randomUUID(),
+        tempId: crypto.randomUUID(),
         barcode: barcode,
+        itemId: itemId,
         itemName: itemName,
         length: '',
         width: '',
@@ -70,8 +72,8 @@ export const useMeasureStore = defineStore('measure', {
         weight: '',
         weightMeasuringStatus: 'not_measured',
       }
-      this.storedData[item.tempItemId] = item
-      this.editingItemId = item.tempItemId
+      this.storedData[item.tempId] = item
+      this.editingTempId = item.tempId
     },
 
     /**
@@ -79,22 +81,22 @@ export const useMeasureStore = defineStore('measure', {
      * 商品は残しつつ、編集中の商品IDをクリアする
      */
     storeEditingItem() {
-      this.editingItemId = ''
+      this.editingTempId = ''
     },
 
     /**
      * 指定した商品を編集中にセット（再測定時など）
-     * storedData に存在する tempItemId の場合のみ editingItemId を更新する
+     * storedData に存在する tempId の場合のみ editingTempId を更新する
      */
-    setEditingItemById(tempItemId: string) {
-      if (this.storedData[tempItemId]) {
-        this.editingItemId = tempItemId
+    setEditingItemById(tempId: string) {
+      if (this.storedData[tempId]) {
+        this.editingTempId = tempId
       }
     },
 
     clearEditingItem() {
-      delete this.storedData[this.editingItemId]
-      this.editingItemId = ''
+      delete this.storedData[this.editingTempId]
+      this.editingTempId = ''
     },
 
     /**
@@ -103,7 +105,7 @@ export const useMeasureStore = defineStore('measure', {
     updateEditingItemVolume(
       payload: { length?: string; width?: string; height?: string }
     ) {
-      const item = this.storedData[this.editingItemId]
+      const item = this.storedData[this.editingTempId]
       if (!item) return
       if (payload.length !== undefined) item.length = payload.length
       if (payload.width !== undefined) item.width = payload.width
@@ -115,7 +117,7 @@ export const useMeasureStore = defineStore('measure', {
      */
     async updateEditingItemWeight() {
       const currentTime = new Date().getTime();
-      const item = this.storedData[this.editingItemId]
+      const item = this.storedData[this.editingTempId]
       if (!item) return
       item.weightMeasuringStatus = 'measuring'
 
@@ -133,7 +135,7 @@ export const useMeasureStore = defineStore('measure', {
 
           latestMeasureHistory = await useSmartMat().getLatestMeasureHistory()
 
-          if (new Date().getTime() >= currentTime + 60 * 1000) {
+          if (new Date().getTime() >= currentTime + 120 * 1000) {
             throw new Error('timeout')
           }
 
@@ -163,20 +165,39 @@ export const useMeasureStore = defineStore('measure', {
      * 編集中の 1 件に measuredAt をセット（登録確認・次商品へ時）
      */
     updateEditingItemMeasuredAt() {
-      const item = this.storedData[this.editingItemId]
+      const item = this.storedData[this.editingTempId]
       if (item) item.measuredAt = formatMeasuredAt()
     },
 
     /**
      * 測定済みデータをAPIに送信する（確認画面の確定時）
-     * 成功時に storedData と editingItemId をクリアする
+     * 成功時に storedData と editingTempId をクリアする
      */
     async submitItems(): Promise<void> {
-      // TODO: 実際のAPI呼び出しに差し替える
-      console.log('submitItems', this.storedData)
-      await Promise.resolve()
+      const updateItemPackWeightRequests = Object.values<StoredDataItem>(this.storedData).map<ItemPackageWeightRequest>((item: StoredDataItem) => ({
+        itemId: item.itemId,
+        caseBarcode: item.barcode,
+        caseWeight: item.weight,
+      }));
+
+      const updateItemPackSizeRequests = Object.values<StoredDataItem>(this.storedData).map<ItemPackageSizeRequest>((item: StoredDataItem) => ({
+        itemId: item.itemId,
+        caseBarcode: item.barcode,
+        caseLength: item.length,
+        caseWidth: item.width,
+        caseHeight: item.height,
+      }));
+
+      if (this.mode === 'volume-and-weight') {
+        await useZeroApi().updateItemPackageWeight(updateItemPackWeightRequests)
+        await useZeroApi().updateItemPackageSize(updateItemPackSizeRequests)
+      } else if (this.mode === 'volume') {
+        await useZeroApi().updateItemPackageSize(updateItemPackSizeRequests)
+      } else if (this.mode === 'weight') {
+        await useZeroApi().updateItemPackageWeight(updateItemPackWeightRequests)
+      }
       this.storedData = {}
-      this.editingItemId = ''
+      this.editingTempId = ''
     },
   },
 })
