@@ -13,6 +13,7 @@ import FixedScrollLayout from '@/layouts/FixedScrollLayout.vue'
 import { useMeasureStore } from '@/stores/measure'
 import type { StoredDataItem } from '@/stores/types'
 import { useLoadingStore } from '@/stores/loading'
+import { useNotificationStore } from '@/stores/notification'
 
 /** 表示モード: 容積+重量 | 容積のみ | 重量のみ（カードに表示する項目を切り替え） */
 export type ConfirmDisplayMode = 'volume-and-weight' | 'volume' | 'weight'

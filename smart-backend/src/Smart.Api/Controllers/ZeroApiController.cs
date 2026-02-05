@@ -38,7 +38,7 @@ public class ZeroApiController : ControllerBase
     [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Get(
+    public async Task<IActionResult> GetSku(
         [FromQuery] string pack_id,
         [FromQuery] string barcode,
         CancellationToken cancellationToken)
@@ -57,20 +57,18 @@ public class ZeroApiController : ControllerBase
     [Route("item-package-weight")]
     [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> PostItemPackageWeight(
+    public async Task<IActionResult> UpdateItemPackageWeight(
         [FromBody] ItemPackageWeightRequest[]? body,
         CancellationToken cancellationToken)
     {
         if (body == null || body.Length == 0)
             return BadRequest(new { error = "At least one item is required." });
 
-        var items = body.Select(b => new PackageWeightItem(
-            b.ItemId ?? "",
-            b.CaseBarcode ?? "",
-            b.CaseWeight ?? "")).ToList();
-
-        var result = await _zeroApiClient.UpdatePackageWeightAsync(items, cancellationToken);
-        return CheckErrorAndReturn(result);
+        var importHeader = "\"商品ID\",\"ケースバーコード\",\"ケース_重量（SKU単位）\"";
+        var importBodyRows = body.Select(b => $"\"{b.ItemId}\",\"{b.CaseBarcode}\",\"{b.CaseWeight}\"");
+        var importRequest = new ImportRequest("2115", "0", new string[] { importHeader }.Concat(importBodyRows).ToArray());
+        var result = await _zeroApiClient.ImportAsync(importRequest, cancellationToken);
+        return Ok(result);
     }
 
     /// <summary>
@@ -83,22 +81,18 @@ public class ZeroApiController : ControllerBase
     [Route("item-package-size")]
     [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> PostItemPackageSize(
+    public async Task<IActionResult> UpdateItemPackageSize(
         [FromBody] ItemPackageSizeRequest[]? body,
         CancellationToken cancellationToken)
     {
         if (body == null || body.Length == 0)
             return BadRequest(new { error = "At least one item is required." });
 
-        var items = body.Select(b => new PackageSizeItem(
-            b.ItemId ?? "",
-            b.CaseBarcode ?? "",
-            b.CaseLength ?? "",
-            b.CaseWidth ?? "",
-            b.CaseHeight ?? "")).ToList();
-
-        var result = await _zeroApiClient.UpdatePackageSizeAsync(items, cancellationToken);
-        return CheckErrorAndReturn(result);
+        var importHeader = "\"商品ID\",\"ケースバーコード\",\"ケース_縦（SKU単位）\",\"ケース_横（SKU単位）\",\"ケース_高さ（SKU単位）\"";
+        var importBodyRows = body.Select(b => $"\"{b.ItemId}\",\"{b.CaseBarcode}\",\"{b.CaseLength}\",\"{b.CaseWidth}\",\"{b.CaseHeight}\"");
+        var importRequest = new ImportRequest("2115", "1", new string[] { importHeader }.Concat(importBodyRows).ToArray());
+        var result = await _zeroApiClient.ImportAsync(importRequest, cancellationToken);
+        return Ok(result);
     }
 
     /// <summary>
@@ -111,30 +105,18 @@ public class ZeroApiController : ControllerBase
     [Route("item-package-weight-and-size")]
     [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> PostItemPackageWeightAndSize(
+    public async Task<IActionResult> UpdateItemPackageWeightAndSize(
         [FromBody] ItemPackageWeightAndSizeRequest[]? body,
         CancellationToken cancellationToken)
     {
         if (body == null || body.Length == 0)
             return BadRequest(new { error = "At least one item is required." });
 
-        var items = body.Select(b => new PackageWeightAndSizeItem(
-            b.ItemId ?? "",
-            b.CaseBarcode ?? "",
-            b.CaseWeight ?? "",
-            b.CaseLength ?? "",
-            b.CaseWidth ?? "",
-            b.CaseHeight ?? "")).ToList();
-
-        var result = await _zeroApiClient.UpdatePackageWeightAndSizeAsync(items, cancellationToken);
-        return CheckErrorAndReturn(result);
-    }
-
-    private static IActionResult CheckErrorAndReturn(object? result)
-    {
-        if (result is JsonElement elem && elem.TryGetProperty("ERROR_CODE", out var code) && code.GetString() != "0")
-            return new BadRequestObjectResult(result);
-        return new OkObjectResult(result);
+        var importHeader = "\"商品ID\",\"ケースバーコード\",\"ケース_重量（SKU単位）\",\"ケース_縦（SKU単位）\",\"ケース_横（SKU単位）\",\"ケース_高さ（SKU単位）\"";
+        var importRows = body.Select(b => $"\"{b.ItemId}\",\"{b.CaseBarcode}\",\"{b.CaseWeight}\",\"{b.CaseLength}\",\"{b.CaseWidth}\",\"{b.CaseHeight}\"");
+        var importRequest = new ImportRequest("2115", "2", new string[] { importHeader }.Concat(importRows).ToArray());
+        var result = await _zeroApiClient.ImportAsync(importRequest, cancellationToken);
+        return Ok(result);
     }
 }
 

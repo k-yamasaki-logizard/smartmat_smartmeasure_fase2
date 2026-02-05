@@ -6,7 +6,9 @@ using System.Linq;
 using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Options;
+using Smart.Api.Clients;
 using Smart.Api.Options;
+using Smart.Api.Extensions;
 
 namespace Smart.Api.Clients;
 
@@ -55,110 +57,6 @@ public class ZeroApiClient : IZeroApiClient
         return string.IsNullOrWhiteSpace(json) ? null : JsonSerializer.Deserialize<JsonElement>(json);
     }
 
-    public async Task<object?> UpdatePackageWeightAndSizeAsync(IReadOnlyList<PackageWeightAndSizeItem> items, CancellationToken cancellationToken = default)
-    {
-        if (items == null || items.Count == 0)
-            throw new ArgumentException("At least one item is required.", nameof(items));
-
-        await EnsureAuthenticatedAsync(cancellationToken);
-
-        const string header = "\"商品ID\",\"ケースバーコード\",\"ケース_縦（SKU単位）\",\"ケース_横（SKU単位）\",\"ケース_高さ（SKU単位）\",\"ケース_重量（SKU単位）\"";
-        var dataRows = items.Select(i => $"\"{EscapeCsvField(i.ItemId ?? "")}\",\"{EscapeCsvField(i.CaseBarcode ?? "")}\",\"{EscapeCsvField(i.CaseLength ?? "")}\",\"{EscapeCsvField(i.CaseWidth ?? "")}\",\"{EscapeCsvField(i.CaseHeight ?? "")}\",\"{EscapeCsvField(i.CaseWeight ?? "")}\"");
-        var importData = new[] { header }.Concat(dataRows).ToArray();
-
-        var url = $"{BaseUrl}/common/import/import";
-        var body = JsonSerializer.Serialize(new
-        {
-            OWNER_ID = _options.OwnerId,
-            AREA_ID = _options.AreaId,
-            ONLY_AREA_IMPORT_FLG = "1",
-            FILE_ID = "2115",
-            PTRN_ID = "2",
-            ERROR_DETAIL = "1",
-            IMPORT_DATA = importData
-        });
-        using var request = new HttpRequestMessage(HttpMethod.Post, url);
-        request.Headers.Add("Cookie", _sessionCookie);
-        request.Content = new StringContent(body, Encoding.UTF8, "application/json");
-
-        using var response = await _httpClient.SendAsync(request, cancellationToken);
-        if (!response.IsSuccessStatusCode)
-            throw new InvalidOperationException($"Update item package weight failed: {response.StatusCode}");
-
-        var json = await response.Content.ReadAsStringAsync(cancellationToken);
-        return string.IsNullOrWhiteSpace(json) ? null : JsonSerializer.Deserialize<JsonElement>(json);
-    }
-
-    /// <inheritdoc />
-    public async Task<object?> UpdatePackageWeightAsync(IReadOnlyList<PackageWeightItem> items, CancellationToken cancellationToken = default)
-    {
-        if (items == null || items.Count == 0)
-            throw new ArgumentException("At least one item is required.", nameof(items));
-
-        await EnsureAuthenticatedAsync(cancellationToken);
-
-        const string header = "\"商品ID\",\"ケースバーコード\",\"ケース_重量（SKU単位）\"";
-        var dataRows = items.Select(i => $"\"{EscapeCsvField(i.ItemId ?? "")}\",\"{EscapeCsvField(i.CaseBarcode ?? "")}\",\"{EscapeCsvField(i.CaseWeight ?? "")}\"");
-        var importData = new[] { header }.Concat(dataRows).ToArray();
-
-        var url = $"{BaseUrl}/common/import/import";
-        var body = JsonSerializer.Serialize(new
-        {
-            OWNER_ID = _options.OwnerId,
-            AREA_ID = _options.AreaId,
-            ONLY_AREA_IMPORT_FLG = "1",
-            FILE_ID = "2115",
-            PTRN_ID = "0",
-            ERROR_DETAIL = "1",
-            IMPORT_DATA = importData
-        });
-        using var request = new HttpRequestMessage(HttpMethod.Post, url);
-        request.Headers.Add("Cookie", _sessionCookie);
-        request.Content = new StringContent(body, Encoding.UTF8, "application/json");
-
-        using var response = await _httpClient.SendAsync(request, cancellationToken);
-        if (!response.IsSuccessStatusCode)
-            throw new InvalidOperationException($"Update item package weight failed: {response.StatusCode}");
-
-        var json = await response.Content.ReadAsStringAsync(cancellationToken);
-        return string.IsNullOrWhiteSpace(json) ? null : JsonSerializer.Deserialize<JsonElement>(json);
-    }
-
-    /// <inheritdoc />
-    public async Task<object?> UpdatePackageSizeAsync(IReadOnlyList<PackageSizeItem> items, CancellationToken cancellationToken = default)
-    {
-        if (items == null || items.Count == 0)
-            throw new ArgumentException("At least one item is required.", nameof(items));
-
-        await EnsureAuthenticatedAsync(cancellationToken);
-
-        const string header = "\"商品ID\",\"ケースバーコード\",\"ケース_縦（SKU単位）\",\"ケース_横（SKU単位）\",\"ケース_高さ（SKU単位）\"";
-        var dataRows = items.Select(i => $"\"{EscapeCsvField(i.ItemId ?? "")}\",\"{EscapeCsvField(i.CaseBarcode ?? "")}\",\"{EscapeCsvField(i.CaseLength ?? "")}\",\"{EscapeCsvField(i.CaseWidth ?? "")}\",\"{EscapeCsvField(i.CaseHeight ?? "")}\"");
-        var importData = new[] { header }.Concat(dataRows).ToArray();
-
-        var url = $"{BaseUrl}/common/import/import";
-        var body = JsonSerializer.Serialize(new
-        {
-            OWNER_ID = _options.OwnerId,
-            AREA_ID = _options.AreaId,
-            ONLY_AREA_IMPORT_FLG = "1",
-            FILE_ID = "2115",
-            PTRN_ID = "1",
-            ERROR_DETAIL = "1",
-            IMPORT_DATA = importData
-        });
-        using var request = new HttpRequestMessage(HttpMethod.Post, url);
-        request.Headers.Add("Cookie", _sessionCookie);
-        request.Content = new StringContent(body, Encoding.UTF8, "application/json");
-
-        using var response = await _httpClient.SendAsync(request, cancellationToken);
-        if (!response.IsSuccessStatusCode)
-            throw new InvalidOperationException($"Update item package size failed: {response.StatusCode}");
-
-        var json = await response.Content.ReadAsStringAsync(cancellationToken);
-        return string.IsNullOrWhiteSpace(json) ? null : JsonSerializer.Deserialize<JsonElement>(json);
-    }
-
     /// <inheritdoc />
     public async Task<object?> GetSkuAsync(string pack_id, string barcode, CancellationToken cancellationToken = default)
     {
@@ -184,6 +82,36 @@ public class ZeroApiClient : IZeroApiClient
             return null;
 
         return JsonSerializer.Deserialize<JsonElement>(json);
+    }
+
+    public async Task<object?> ImportAsync(ImportRequest importRequest, CancellationToken cancellationToken = default)
+    {
+        await EnsureAuthenticatedAsync(cancellationToken);
+
+        Console.WriteLine(string.Join("\n", importRequest.ImportCsvRows));
+
+        var body = new
+        {
+            OWNER_ID = _options.OwnerId,
+            AREA_ID = _options.AreaId,
+            ONLY_AREA_IMPORT_FLG = "1",
+            FILE_ID = importRequest.FileId,
+            PTRN_ID = importRequest.PtrnId,
+            ERROR_DETAIL = "1",
+            IMPORT_DATA = importRequest.ImportCsvRows
+        };
+
+        var url = $"{BaseUrl}/common/import/import";
+        using var request = new HttpRequestMessage(HttpMethod.Post, url);
+        request.Headers.Add("Cookie", _sessionCookie);
+        request.Content = new StringContent(JsonSerializer.Serialize(body), Encoding.UTF8, "application/json");
+
+        using var response = await _httpClient.SendAsync(request, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+            throw new InvalidOperationException($"Import failed: {response.StatusCode}");
+
+        var json = await response.Content.ReadAsStringAsync(cancellationToken);
+        return string.IsNullOrWhiteSpace(json) ? null : JsonSerializer.Deserialize<JsonElement>(json);
     }
 
     private async Task EnsureAuthenticatedAsync(CancellationToken cancellationToken)
@@ -212,9 +140,4 @@ public class ZeroApiClient : IZeroApiClient
         return null;
     }
 
-    private static string EscapeCsvField(string value)
-    {
-        if (string.IsNullOrEmpty(value)) return value;
-        return value.Replace("\"", "\"\"");
-    }
 }
