@@ -61,6 +61,26 @@ export type ItemPackageSizeRequest = {
     caseHeight: string;
 }
 
+export type ItemWeightRequest = {
+    itemId: string;
+    weight: string;
+}
+
+export type ItemSizeRequest = {
+    itemId: string;
+    length: string;
+    width: string;
+    height: string;
+}
+
+export type ItemWeightAndSizeRequest = {
+    itemId: string;
+    weight: string;
+    length: string;
+    width: string;
+    height: string;
+}
+
 export const useZeroApi = () => {
     const getSku = async (pack_id: string, barcode: string): Promise<GetSkuResponse | null> => {
         try {
@@ -118,10 +138,55 @@ export const useZeroApi = () => {
         return response.json() as Promise<ImportResponse>;
     }
 
+    const updateItemWeight = async (request: ItemWeightRequest[]): Promise<ImportResponse> => {
+        const response = await fetch(`/api/zero-api/item-weight`, {
+            method: 'POST',
+            body: JSON.stringify(request),
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+        if (!response.ok) {
+            throw new Error('Failed to update item weight');
+        }
+        return response.json() as Promise<ImportResponse>;
+    }
+
+    const updateItemSize = async (request: ItemSizeRequest[]): Promise<ImportResponse> => {
+        const response = await fetch(`/api/zero-api/item-size`, {
+            method: 'POST',
+            body: JSON.stringify(request),
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+        if (!response.ok) {
+            throw new Error('Failed to update item size');
+        }
+        return response.json() as Promise<ImportResponse>;
+    }
+
+    const updateItemWeightAndSize = async (request: ItemWeightAndSizeRequest[]): Promise<ImportResponse> => {
+        const response = await fetch(`/api/zero-api/item-weight-and-size`, {
+            method: 'POST',
+            body: JSON.stringify(request),
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+        if (!response.ok) {
+            throw new Error('Failed to update item weight and size');
+        }
+        return response.json() as Promise<ImportResponse>;
+    }
+
     return {
         getSku,
-        updateItemPackageWeightAndSize,
         updateItemPackageWeight,
         updateItemPackageSize,
+        updateItemPackageWeightAndSize,
+        updateItemWeight,
+        updateItemSize,
+        updateItemWeightAndSize,
     }
 }

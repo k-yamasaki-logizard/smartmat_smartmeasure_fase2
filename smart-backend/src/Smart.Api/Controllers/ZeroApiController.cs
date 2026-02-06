@@ -118,6 +118,60 @@ public class ZeroApiController : ControllerBase
         var result = await _zeroApiClient.ImportAsync(importRequest, cancellationToken);
         return Ok(result);
     }
+
+    [HttpPost]
+    [Route("item-weight")]
+    [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> UpdateItemWeight(
+        [FromBody] ItemWeightRequest[]? body,
+        CancellationToken cancellationToken)
+    {
+        if (body == null || body.Length == 0)
+            return BadRequest(new { error = "At least one item is required." });
+
+        var importHeader = "\"商品ID\",\"重量\"";
+        var importBodyRows = body.Select(b => $"\"{b.ItemId}\",\"{b.Weight}\"");
+        var importRequest = new ImportRequest("2115", "3", new string[] { importHeader }.Concat(importBodyRows).ToArray());
+        var result = await _zeroApiClient.ImportAsync(importRequest, cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpPost]
+    [Route("item-size")]
+    [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> UpdateItemSize(
+        [FromBody] ItemSizeRequest[]? body,
+        CancellationToken cancellationToken)
+    {
+        if (body == null || body.Length == 0)
+            return BadRequest(new { error = "At least one item is required." });
+
+        var importHeader = "\"商品ID\",\"縦\",\"横\",\"高さ\"";
+        var importBodyRows = body.Select(b => $"\"{b.ItemId}\",\"{b.Length}\",\"{b.Width}\",\"{b.Height}\"");
+        var importRequest = new ImportRequest("2115", "4", new string[] { importHeader }.Concat(importBodyRows).ToArray());
+        var result = await _zeroApiClient.ImportAsync(importRequest, cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpPost]
+    [Route("item-weight-and-size")]
+    [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> UpdateItemWeightAndSize(
+        [FromBody] ItemWeightAndSizeRequest[]? body,
+        CancellationToken cancellationToken)
+    {
+        if (body == null || body.Length == 0)
+            return BadRequest(new { error = "At least one item is required." });
+
+        var importHeader = "\"商品ID\",\"重量\",\"縦\",\"横\",\"高さ\"";
+        var importBodyRows = body.Select(b => $"\"{b.ItemId}\",\"{b.Weight}\",\"{b.Length}\",\"{b.Width}\",\"{b.Height}\"");
+        var importRequest = new ImportRequest("2115", "5", new string[] { importHeader }.Concat(importBodyRows).ToArray());
+        var result = await _zeroApiClient.ImportAsync(importRequest, cancellationToken);
+        return Ok(result);
+    }
 }
 
 /// <summary>梱包形態（重量）更新のリクエスト body</summary>
@@ -128,3 +182,12 @@ public record ItemPackageSizeRequest(string? ItemId, string? CaseBarcode, string
 
 /// <summary>梱包形態（重量とサイズ）更新のリクエスト body</summary>
 public record ItemPackageWeightAndSizeRequest(string? ItemId, string? CaseBarcode, string? CaseWeight, string? CaseLength, string? CaseWidth, string? CaseHeight);
+
+/// <summary>商品マスタ（重量）更新のリクエスト body</summary>
+public record ItemWeightRequest(string? ItemId, string? Weight);
+
+/// <summary>商品マスタ（サイズ）更新のリクエスト body</summary>
+public record ItemSizeRequest(string? ItemId, string? Length, string? Width, string? Height);
+
+/// <summary>商品マスタ（重量とサイズ）更新のリクエスト body</summary>
+public record ItemWeightAndSizeRequest(string? ItemId, string? Weight, string? Length, string? Width, string? Height);

@@ -1,6 +1,5 @@
 import { defineStore } from 'pinia'
 import type { RegisterTargetMaster, VolumeLongestSide } from './types'
-
 /**
  * 設定ストア
  * 容積・重量 登録先マスタ/項目、容積測定 縦/横 自動変更
