@@ -13,6 +13,7 @@ import Input from '@/components/Input.vue'
 import { useMeasureStore } from '@/stores/measure'
 import { useSettingsStore } from '@/stores/settings'
 import { useNotificationStore } from '@/stores/notification'
+import { VueDraggable } from 'vue-draggable-plus'
 
 const props = defineProps<{
   /** 戻る先パス */
@@ -36,7 +37,7 @@ const handleConfirm = (): void => {
   const { length: assignedLength, width: assignedWidth, changed } =
     settingsStore.getAssignedLengthWidth(length.value, width.value)
   if (changed) {
-    notification.show('縦/横を入れ替えました')
+    notification.show(`【${settingsStore.volumeLongestSide.label}】\n縦/横を入れ替えました`)
   }
   measureStore.updateEditingItemVolume({
     length: assignedLength,
@@ -47,22 +48,22 @@ const handleConfirm = (): void => {
     measureStore.updateEditingItemMeasuredAt()
   }
   router.push(props.nextTo)
+}
 
-  const inputList = ref([
+const inputList = ref([
     {
       label: '縦:',
-      value: length.value,
+      value: length,
     },
     {
       label: '横:',
-      value: width.value,
+      value: width,
     },
     {
       label: '高さ:',
-      value: height.value,
+      value: height,
     },
-  ])
-}
+])
 
 </script>
 
@@ -75,9 +76,9 @@ const handleConfirm = (): void => {
     <span>計測してください</span>
   </div>
   <p class="font-bold w-full text-left mb-4">商品名: {{ measureStore.editingItem?.itemName ?? '' }}</p>
-  <Input v-model="length" label="縦:" class="mb-2"/>
-  <Input v-model="width" label="横:" class="mb-2"/>
-  <Input v-model="height" label="高さ:" class="mb-2"/>
+  <VueDraggable v-model="inputList">
+    <Input v-for="input in inputList" :key="input.label" v-model="input.value" :label="input.label" class="mb-2" />
+  </VueDraggable>
   <Footer>
     <FooterButton position="3" variant="primary" @click="handleConfirm">
       確定

@@ -14,6 +14,7 @@ import { useMeasureStore } from '@/stores/measure'
 import type { StoredDataItem } from '@/stores/types'
 import { useLoadingStore } from '@/stores/loading'
 import { useNotificationStore } from '@/stores/notification'
+import { useSettingsStore } from '@/stores/settings'
 
 /** 表示モード: 容積+重量 | 容積のみ | 重量のみ（カードに表示する項目を切り替え） */
 export type ConfirmDisplayMode = 'volume-and-weight' | 'volume' | 'weight'
@@ -29,6 +30,7 @@ const props = defineProps<{
 
 const router = useRouter()
 const measureStore = useMeasureStore()
+const settingsStore = useSettingsStore()
 const items: StoredDataItem[] = measureStore.storedList
 
 /** 表示用の行番号（item.number があれば使用、なければ index+1） */
@@ -40,7 +42,7 @@ function displayNumber(item: StoredDataItem & { number?: number }, index: number
 const handleConfirm = async (): Promise<void> => {
   try {
     useLoadingStore().show()
-    const result = await measureStore.submitItems()
+    const result = await measureStore.submitItems(settingsStore.registerTargetMaster)
     if (result?.ERROR_CODE !== "0") {
       throw new Error(result?.ERROR_MESSAGE)
     }

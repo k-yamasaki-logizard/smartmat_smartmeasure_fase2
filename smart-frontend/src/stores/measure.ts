@@ -2,8 +2,7 @@ import { defineStore } from 'pinia'
 import type { MeasureMode, RegisterTargetMaster, StoredDataItem, StoredDataRecord } from './types'
 import { useSmartMat } from '@/composables/smart-mat'
 import { useZeroApi } from '@/composables/zero-api'
-import { useSettingsStore } from './settings'
-import type { ImportResponse, ItemPackageWeightAndSizeRequest, ItemPackageWeightRequest, ItemSizeRequest, ItemWeightAndSizeRequest, ItemWeightRequest } from '@/composables/zero-api'
+import type { ImportResponse } from '@/composables/zero-api'
 
 
 function pad2(n: number): string {
@@ -15,6 +14,73 @@ function formatMeasuredAt(): string {
   return `${d.getFullYear()}/${pad2(d.getMonth() + 1)}/${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`
 }
 
+/**
+ * submit時の部分
+ * ・settings storeでの登録先マスタ
+ * ・measure storeでの測定モード
+ * 上記によって、動きが変わる
+*/
+const submitMap: Record<RegisterTargetMaster, Record<MeasureMode, (storedData: StoredDataItem[]) => Promise<ImportResponse>>> = {
+  'm_item': {
+    'volume-and-weight': async (storedData: StoredDataItem[]) => {
+      const requests = storedData.map((item) => ({
+        itemId: item.itemId,
+        weight: item.weight,
+        length: item.length,
+        width: item.width,
+        height: item.height,
+      }))
+      return await useZeroApi().updateItemWeightAndSize(requests)
+    },
+    'volume': async (storedData: StoredDataItem[]) => {
+      const requests = storedData.map((item) => ({
+        itemId: item.itemId,
+        length: item.length,
+        width: item.width,
+        height: item.height,
+      }))
+      return await useZeroApi().updateItemSize(requests)
+    },
+    'weight': async (storedData: StoredDataItem[]) => {
+      const requests = storedData.map((item) => ({
+        itemId: item.itemId,
+        weight: item.weight,
+      }))
+      return await useZeroApi().updateItemWeight(requests)
+    },
+  },
+  'm_item_pack': {
+    'volume-and-weight': async (storedData: StoredDataItem[]) => {
+      const requests = storedData.map((item) => ({
+        itemId: item.itemId,
+        caseBarcode: item.barcode,
+        caseWeight: item.weight,
+        caseLength: item.length,
+        caseWidth: item.width,
+        caseHeight: item.height,
+      }))
+      return await useZeroApi().updateItemPackWeightAndSize(requests)
+    },
+    'volume': async (storedData: StoredDataItem[]) => {
+      const requests = storedData.map((item) => ({
+        itemId: item.itemId,
+        caseBarcode: item.barcode,
+        caseLength: item.length,
+        caseWidth: item.width,
+        caseHeight: item.height,
+      }))
+      return await useZeroApi().updateItemPackSize(requests)
+    },
+    'weight': async (storedData: StoredDataItem[]) => {
+      const requests = storedData.map((item) => ({
+        itemId: item.itemId,
+        caseBarcode: item.barcode,
+        caseWeight: item.weight,
+      }))
+      return await useZeroApi().updateItemPackWeight(requests)
+    },
+  },
+}
 
 /**
  * 測定ストア
@@ -175,78 +241,10 @@ export const useMeasureStore = defineStore('measure', {
      * 測定済みデータをAPIに送信する（確認画面の確定時）
      * 成功時に storedData と editingTempId をクリアする
      */
-    async submitItems(): Promise<void> {
-      /**
-       * submit時の部分
-       * ・settings storeでの登録先マスタ
-       * ・measure storeでの測定モード
-       * 上記によって、動きが変わる
-      */
-      const submitMap: Record<RegisterTargetMaster, Record<MeasureMode, (items: StoredDataItem[]) => Promise<ImportResponse>>> = {
-        'm_item': {
-          'volume-and-weight': async () => {
-            const requests = (Object.values(this.storedData) as StoredDataItem[]).map((item) => ({
-              itemId: item.itemId,
-              weight: item.weight,
-              length: item.length,
-              width: item.width,
-              height: item.height,
-            }))
-            return await useZeroApi().updateItemWeightAndSize(requests)
-          },
-          'volume': async () => {
-            const requests = (Object.values(this.storedData) as StoredDataItem[]).map((item) => ({
-              itemId: item.itemId,
-              length: item.length,
-              width: item.width,
-              height: item.height,
-            }))
-            return await useZeroApi().updateItemSize(requests)
-          },
-          'weight': async () => {
-            const requests = (Object.values(this.storedData) as StoredDataItem[]).map((item) => ({
-              itemId: item.itemId,
-              weight: item.weight,
-            }))
-            return await useZeroApi().updateItemWeight(requests)
-          },
-        },
-        'm_item_pack': {
-          'volume-and-weight': async () => {
-            const requests = (Object.values(this.storedData) as StoredDataItem[]).map((item) => ({
-              itemId: item.itemId,
-              caseBarcode: item.barcode,
-              caseWeight: item.weight,
-              caseLength: item.length,
-              caseWidth: item.width,
-              caseHeight: item.height,
-            }))
-            return await useZeroApi().updateItemPackWeightAndSize(requests)
-          },
-          'volume': async () => {
-            const requests = (Object.values(this.storedData) as StoredDataItem[]).map((item) => ({
-              itemId: item.itemId,
-              caseBarcode: item.barcode,
-              caseLength: item.length,
-              caseWidth: item.width,
-              caseHeight: item.height,
-            }))
-            return await useZeroApi().updateItemPackSize(requests)
-          },
-          'weight': async () => {
-            const requests = (Object.values(this.storedData) as StoredDataItem[]).map((item) => ({
-              itemId: item.itemId,
-              caseBarcode: item.barcode,
-              caseWeight: item.weight,
-            }))
-            return await useZeroApi().updateItemPackWeight(requests)
-          },
-        },
-      }
-
-      const settingsStore = useSettingsStore()
-      const updateMethod = submitMap[settingsStore.registerTargetMaster as RegisterTargetMaster][this.mode as MeasureMode]
-      const result = await updateMethod(Object.values(this.storedData))
+    async submitItems(targetMaster: RegisterTargetMaster): Promise<void> {
+      const updateMethod = submitMap[targetMaster][this.mode as MeasureMode]
+      const storedData: StoredDataItem[] = Object.values(this.storedData);
+      const result = await updateMethod(storedData);
       this.storedData = {}
       this.editingTempId = ''
       return result;

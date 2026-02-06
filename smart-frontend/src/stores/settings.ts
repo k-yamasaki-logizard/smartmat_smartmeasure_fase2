@@ -9,7 +9,7 @@ export const useSettingsStore = defineStore('settings', {
     /** 登録先マスタ: 商品マスタ | 商品梱包形態マスタ */
     registerTargetMaster: 'm_item' as RegisterTargetMaster,
     /** 容積測定 縦/横 自動変更: 最長辺 = 縦 | 最長辺 = 横 */
-    volumeLongestSide: 'length' as VolumeLongestSide,
+    volumeLongestSide: { value: 'length', label: '[最長辺 = 縦]に自動変更' } as VolumeLongestSide,
     /** 縦 (容積) の登録先項目 */
     volumeLengthField: 'length_sku',
     /** 横 (容積) の登録先項目 */
@@ -48,7 +48,7 @@ export const useSettingsStore = defineStore('settings', {
     getAssignedLengthWidth(length: string, width: string): { length: string, width: string, changed: boolean } {
       const lengthValue = Number(length)
       const widthValue = Number(width)
-      if (this.volumeLongestSide === 'length') {
+      if (this.volumeLongestSide.value === 'length') {
         return { length: lengthValue > widthValue ? length.toString() : width.toString(), width: lengthValue < widthValue ? length.toString() : width.toString(), changed: lengthValue < widthValue }
       }
       return { length: lengthValue < widthValue ? length.toString() : width.toString(), width: lengthValue > widthValue ? length.toString() : width.toString(), changed: lengthValue > widthValue }
