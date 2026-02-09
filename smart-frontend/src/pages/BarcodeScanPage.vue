@@ -10,6 +10,8 @@ import { useMeasureStore } from '@/stores/measure'
 import { useZeroApi } from '@/composables/zero-api'
 import { useNotificationStore } from '@/stores/notification'
 import { useLoadingStore } from '@/stores/loading'
+import InputLabel from '@/components/InputLabel.vue'
+import type { FormInstance } from 'vant'
 
 const props = defineProps<{
     backTo: string,
@@ -22,27 +24,32 @@ const props = defineProps<{
  * バーコードスキャン
  */
 const router = useRouter()
-const barcode = ref('')
 const zeroApi = useZeroApi()
 const notification = useNotificationStore()
 
 const measureStore = useMeasureStore();
 
-const handleConfirm = async () => {
-  // 暫定的に、pack_barcode=3で固定
+const formRef = ref<FormInstance | null>(null)
+const barcode = ref('')
+
+const handleConfirm = async (): Promise<void> => {
   try {
+    const valid = await formRef.value?.validate().then(() => true).catch(() => false)
+    if (!valid) {
+      return
+    }
     useLoadingStore().show()
     const sku = await zeroApi.getSku(props.packId, barcode.value)
-    if(sku?.ERROR_CODE === "6") {
+    if(sku?.ERROR_CODE === "4") {
         throw new Error('バーコード未登録の商品です。\nロジザードZEROで商品/バーコードを登録後、再度読み取ってください。')
     }
     if(sku?.ERROR_CODE !== "0") {
-        throw new Error(sku?.ERROR_MESSAGE)
+        throw new Error(`バーコードの読み取りでエラーが発生しました(${sku?.ERROR_MESSAGE})`)
     }
     measureStore.addEditingItem(barcode.value, sku.DATA.SKU[0].ITEM_ID, sku.DATA.SKU[0].ITEM_NAME)
     router.push(props.nextTo)
   } catch (error) {
-    notification.show(`バーコードの読み取りでエラーが発生しました(${error})`)
+    notification.show((error as Error).message ?? 'エラーが発生しました')
   } finally {
     useLoadingStore().hide()
   }
@@ -62,10 +69,25 @@ onMounted(() => {
     <span>容積・重量を測定する商品の</span>
     <span>バーコードをスキャンしてください</span>
   </div>
-  <Input v-model="barcode" label="BC:" class="mb-4" />
+  <van-form ref="formRef" class="w-full">
+    <van-field v-model="barcode" name="barcode" :rules="[{ required: true, message: 'バーコードを入力してください' }]">
+      <template #label>
+        <InputLabel :label="'BC:'" />
+      </template>
+      <template #input>
+        <Input :autofocus="true" v-model="barcode" />
+      </template>
+    </van-field>
+  </van-form>
   <Footer>
     <FooterButton position="3" variant="primary" @click="handleConfirm">
         確定
     </FooterButton>
   </Footer>
 </template>
+
+<style scoped>
+:deep(.van-field__label) {
+  width: 8%;
+}
+</style>

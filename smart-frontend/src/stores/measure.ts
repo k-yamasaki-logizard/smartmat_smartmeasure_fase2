@@ -59,7 +59,7 @@ const submitMap: Record<RegisterTargetMaster, Record<MeasureMode, (storedData: S
         caseWidth: item.width,
         caseHeight: item.height,
       }))
-      return await useZeroApi().updateItemPackWeightAndSize(requests)
+      return await useZeroApi().updateItemPackageWeightAndSize(requests)
     },
     'volume': async (storedData: StoredDataItem[]) => {
       const requests = storedData.map((item) => ({
@@ -69,7 +69,7 @@ const submitMap: Record<RegisterTargetMaster, Record<MeasureMode, (storedData: S
         caseWidth: item.width,
         caseHeight: item.height,
       }))
-      return await useZeroApi().updateItemPackSize(requests)
+      return await useZeroApi().updateItemPackageSize(requests)
     },
     'weight': async (storedData: StoredDataItem[]) => {
       const requests = storedData.map((item) => ({
@@ -77,7 +77,7 @@ const submitMap: Record<RegisterTargetMaster, Record<MeasureMode, (storedData: S
         caseBarcode: item.barcode,
         caseWeight: item.weight,
       }))
-      return await useZeroApi().updateItemPackWeight(requests)
+      return await useZeroApi().updateItemPackageWeight(requests)
     },
   },
 }
@@ -159,9 +159,10 @@ export const useMeasureStore = defineStore('measure', {
      * storedData に存在する tempId の場合のみ editingTempId を更新する
      */
     setEditingItemById(tempId: string) {
-      if (this.storedData[tempId]) {
-        this.editingTempId = tempId
+      if (!this.storedData[tempId]) {
+        throw new Error(`編集中の商品が存在しません(ID:${tempId})`);
       }
+      this.editingTempId = tempId
     },
 
     clearEditingItem() {
@@ -176,7 +177,9 @@ export const useMeasureStore = defineStore('measure', {
       payload: { length?: string; width?: string; height?: string }
     ) {
       const item = this.storedData[this.editingTempId]
-      if (!item) return
+      if (!item) {
+        throw new Error(`編集中の商品が存在しません(ID:${this.editingTempId})`);
+      }
       if (payload.length !== undefined) item.length = payload.length
       if (payload.width !== undefined) item.width = payload.width
       if (payload.height !== undefined) item.height = payload.height
@@ -188,7 +191,9 @@ export const useMeasureStore = defineStore('measure', {
     async updateEditingItemWeight() {
       const currentTime = new Date().getTime();
       const item = this.storedData[this.editingTempId]
-      if (!item) return
+      if (!item) {
+        throw new Error(`編集中の商品が存在しません(ID:${this.editingTempId})`);
+      }
       item.weightMeasuringStatus = 'measuring'
 
       try {
@@ -212,7 +217,7 @@ export const useMeasureStore = defineStore('measure', {
           }
         } while (new Date(stockInfo.deviceMeasurement.measuredAt).getTime() <= currentTime)
 
-        item.weight = stockInfo.subscriptionMeasurement.current.toString()
+        item.weight = stockInfo.deviceMeasurement.current.toString()
         item.weightMeasuringStatus = 'measured'
         return {
           success: true,
@@ -250,4 +255,6 @@ export const useMeasureStore = defineStore('measure', {
       return result;
     },
   },
+
+  persist: true
 })

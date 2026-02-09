@@ -54,4 +54,6 @@ export const useSettingsStore = defineStore('settings', {
       return { length: lengthValue < widthValue ? length.toString() : width.toString(), width: lengthValue > widthValue ? length.toString() : width.toString(), changed: lengthValue > widthValue }
     },
   },
+
+  persist: true
 })

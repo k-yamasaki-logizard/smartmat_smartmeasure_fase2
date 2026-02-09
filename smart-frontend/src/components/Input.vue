@@ -1,18 +1,12 @@
 <script setup lang="ts">
-    import { computed } from 'vue'
-    import type { FieldRule } from 'vant'
+    import { ref, onMounted, computed } from 'vue'
 
     const props = withDefaults(defineProps<{
-        modelValue?: string
-        label: string
-        labelWidth?: string
-        rules?: FieldRule[]
-        class?: string
+        autofocus?: boolean,
+        modelValue?: string,
     }>(), {
+        autofocus: false,
         modelValue: '',
-        labelWidth: "auto",
-        rules: [],
-        class: ''
     })
 
     const emit = defineEmits<{
@@ -24,32 +18,20 @@
         set: (val: string) => emit('update:modelValue', val)
     })
 
+    const inputRef = ref<HTMLInputElement | null>(null)
+    
+    onMounted(() => {
+        if (props.autofocus) {
+            inputRef.value?.focus()
+        }
+    })
 </script>
 
 <template>
-    <van-form ref="formInstance" class="w-full" :rules="rules" validate-trigger="onSubmit" :class="class">
-        <div class="border-1 border-[#CCCCCC] rounded-lg w-full">
-            <!-- BC -->
-            <van-field v-model="innerValue" :rules="rules">
-                <template #label>
-                    <div class="flex items-center">
-                        <label class="text-[#4caf50] whitespace-nowrap">{{ props.label }}</label>
-                    </div>
-                </template>
-                <template #input>
-                    <input
-                        v-model="innerValue"
-                        type="text"
-                        class="border-b-2 border-[#4CAF50] bg-[#FFFF99] flex-1 focus:outline-none focus:border-b-orange-400"
-                    >
-                </template>
-            </van-field>
-        </div>
-    </van-form>
+    <input
+        ref="inputRef"
+        v-model="innerValue"
+        type="text"
+        class="border-b-2 border-[#4CAF50] bg-[#FFFF99] flex-1 focus:outline-none focus:border-b-orange-400"
+    >
 </template>
-
-<style scoped>
-    :deep(.van-field__label) {
-        width: v-bind(labelWidth);
-    }
-</style>

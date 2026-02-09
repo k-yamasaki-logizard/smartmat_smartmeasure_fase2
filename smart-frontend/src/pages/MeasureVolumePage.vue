@@ -14,6 +14,7 @@ import { useMeasureStore } from '@/stores/measure'
 import { useSettingsStore } from '@/stores/settings'
 import { useNotificationStore } from '@/stores/notification'
 import { VueDraggable } from 'vue-draggable-plus'
+import type { FormInstance } from 'vant'
 
 const props = defineProps<{
   /** 戻る先パス */
@@ -29,11 +30,17 @@ const measureStore = useMeasureStore()
 const settingsStore = useSettingsStore()
 const notification = useNotificationStore()
 
-const length = ref('')
-const width = ref('')
-const height = ref('')
+const formRef = ref<FormInstance | null>(null)
 
-const handleConfirm = (): void => {
+const length = ref(measureStore.editingItem?.length ?? '')
+const width = ref(measureStore.editingItem?.width ?? '')
+const height = ref(measureStore.editingItem?.height ?? '')
+
+const handleConfirm = async (): Promise<void> => {
+  const valid = await formRef.value?.validate().then(() => true).catch(() => false)
+  if (!valid) {
+    return
+  }
   const { length: assignedLength, width: assignedWidth, changed } =
     settingsStore.getAssignedLengthWidth(length.value, width.value)
   if (changed) {
@@ -76,12 +83,27 @@ const inputList = ref([
     <span>計測してください</span>
   </div>
   <p class="font-bold w-full text-left mb-4">商品名: {{ measureStore.editingItem?.itemName ?? '' }}</p>
-  <VueDraggable v-model="inputList">
-    <Input v-for="input in inputList" :key="input.label" v-model="input.value" :label="input.label" class="mb-2" />
-  </VueDraggable>
+  <van-form ref="formRef" class="w-full">
+    <VueDraggable v-model="inputList">
+      <van-field v-for="(input, index) in inputList" :key="input.label" v-model="input.value" :name="input.value" :rules="[{ required: true, message: `${input.label}を入力してください` }]">
+        <template #label>
+          <InputLabel :label="input.label" />
+        </template>
+        <template #input>
+          <Input :autofocus="index === 0" v-model="input.value" />
+        </template>
+      </van-field>
+    </VueDraggable>
+  </van-form>  
   <Footer>
     <FooterButton position="3" variant="primary" @click="handleConfirm">
       確定
     </FooterButton>
   </Footer>
 </template>
+
+<style scoped>
+:deep(.van-field__label) {
+  width: 10%;
+}
+</style>
