@@ -112,8 +112,8 @@ public class ZeroApiController : ControllerBase
         if (body == null || body.Length == 0)
             return BadRequest(new { error = "At least one item is required." });
 
-        var importHeader = "\"商品ID\",\"ケースバーコード\",\"ケース_重量（SKU単位）\",\"ケース_縦（SKU単位）\",\"ケース_横（SKU単位）\",\"ケース_高さ（SKU単位）\"";
-        var importRows = body.Select(b => $"\"{b.ItemId}\",\"{b.CaseBarcode}\",\"{b.CaseWeight}\",\"{b.CaseLength}\",\"{b.CaseWidth}\",\"{b.CaseHeight}\"");
+        var importHeader = "\"商品ID\",\"ケースバーコード\",\"ケース_縦（SKU単位）\",\"ケース_横（SKU単位）\",\"ケース_高さ（SKU単位）\",\"ケース_重量（SKU単位）\"";
+        var importRows = body.Select(b => $"\"{b.ItemId}\",\"{b.CaseBarcode}\",\"{b.CaseLength}\",\"{b.CaseWidth}\",\"{b.CaseHeight}\",\"{b.CaseWeight}\"");
         var importRequest = new ImportRequest("2115", "2", new string[] { importHeader }.Concat(importRows).ToArray());
         var result = await _zeroApiClient.ImportAsync(importRequest, cancellationToken);
         return Ok(result);

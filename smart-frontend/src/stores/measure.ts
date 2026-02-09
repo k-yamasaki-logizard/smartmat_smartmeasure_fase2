@@ -206,7 +206,7 @@ export const useMeasureStore = defineStore('measure', {
         let stockInfo = null;
 
         do {
-          await new Promise((resolve) => setTimeout(resolve, 10 * 1000))
+          await new Promise((resolve) => setTimeout(resolve, 5 * 1000))
 
           stockInfo = await useSmartMat().getStockInfo()
           if (!stockInfo) {
