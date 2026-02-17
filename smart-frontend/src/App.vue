@@ -5,7 +5,7 @@ import LoadingOverlay from '@/components/LoadingOverlay.vue'
 </script>
 
 <template>
-  <ContentWrapper>
+  <ContentWrapper ownerName="スマートマットクラウド検証" areaName="OCEテスト東京">
     <router-view />
   </ContentWrapper>
   <NotificationBar />

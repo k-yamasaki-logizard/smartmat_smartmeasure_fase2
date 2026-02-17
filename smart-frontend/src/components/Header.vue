@@ -1,14 +1,14 @@
 <script setup lang="ts">
 withDefaults(
   defineProps<{
-    consignor?: string
-    warehouse?: string
+    ownerName?: string
+    areaName?: string
     badgeLabel?: string
     badgeSublabel?: string
   }>(),
   {
-    consignor: '',
-    warehouse: '',
+    ownerName: '',
+    areaName: '',
     badgeLabel: 'LZ',
     badgeSublabel: '容積/重量',
   }
@@ -26,8 +26,8 @@ const emit = defineEmits<{
       <span class="block text-sm leading-tight">{{ badgeSublabel }}</span>
     </div>
     <div class="text-neutral-900">
-      <div class="text-base leading-normal">荷主: {{ consignor || 'XXXXXXXXXXXXX' }}</div>
-      <div class="text-base leading-normal">倉庫: {{ warehouse || 'XXXXXXXXXXXXX' }}</div>
+      <div class="text-base leading-normal">荷主: {{ ownerName || 'XXXXXXXXXXXXX' }}</div>
+      <div class="text-base leading-normal">倉庫: {{ areaName || 'XXXXXXXXXXXXX' }}</div>
     </div>
   </div>
 </template>
