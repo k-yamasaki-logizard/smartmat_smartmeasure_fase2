@@ -33,6 +33,7 @@ export default defineConfig({
         },
       },
     },
+    allowedHosts: ['test-micro-service-docker.logizard-dev.net'],
   },
 
   resolve: {
