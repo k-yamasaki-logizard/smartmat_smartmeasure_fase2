@@ -17,7 +17,7 @@ services:
       context: ./smart-frontend
       dockerfile: Dockerfile.dev
     ports:
-      - "5173:5173"
+      - "5174:5173"
     volumes:
       - ./smart-frontend:/app
       - /app/node_modules
