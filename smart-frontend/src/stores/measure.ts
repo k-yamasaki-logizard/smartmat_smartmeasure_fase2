@@ -132,7 +132,8 @@ export const useMeasureStore = defineStore('measure', {
      */
     addEditingItem(barcode: string, itemId: string, itemName: string) {
       const item: StoredDataItem = {
-        tempId: crypto.randomUUID(),
+        // 衝突しない程度の一時キーを生成
+        tempId: `${Date.now()}-${Math.random().toString(36)}`,
         barcode: barcode,
         itemId: itemId,
         itemName: itemName,
